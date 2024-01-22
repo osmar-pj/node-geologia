@@ -2,7 +2,6 @@ import TajoGeologyModel from '../models/TajoGeologyModel.js'
 
 export const generateTajo = async (req, res) => {
     try {
-
         const count = await TajoGeologyModel.estimatedDocumentCount()
 
         if (count == 0) {

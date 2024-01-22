@@ -1,0 +1,20 @@
+# Node
+node_modules/
+
+# Build
+build/
+data/
+
+# environment variables
+.env
+
+# .gitignore
+[16:42, 21/01/2024] Henry Amarillos Programador: ,gitignore NODE
+
+node_modules/
+
+.env
+
+# .dockerignore
+
+Dockerfile

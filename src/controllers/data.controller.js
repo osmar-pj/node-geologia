@@ -61,7 +61,6 @@ export const getListGeology = async (req, res) => {
 
         const mining = req.query.mining;
         const month = req.query.month;
-
         const array = req.query.array;
 
 
@@ -130,7 +129,6 @@ export const getGroup = async (req, res) => {
         const orderColumns = filtered.map((item) => filterColumns.find((col) => col.field === item));
         const result = [...orderColumns, ...staticColumns];
 
-        console.log(result)
         // console.log(orderColumns)
         
         // const filteredColumns = columns.filter(col => filtered.includes(col.field));
@@ -138,6 +136,19 @@ export const getGroup = async (req, res) => {
         // console.log(finalColumns)
 
         return res.status(200).json({status: true, data: data, columns: result, orderColumns: orderColumns});
+
+    } catch (error) {
+        res.json({ message: error.message });
+    }
+}
+
+export const getDataAnalysis = async (req, res) => {
+    try {
+        const ts = Math.round(req.query.ts / 1000)
+        const mining = req.query.mining
+        const response = await axios.get(`${process.env.FLASK_URL}/analysis2?ts=${ts}&mining=${mining}`);
+        const data = response.data;
+        return res.status(200).json({status: true, data});
 
     } catch (error) {
         res.json({ message: error.message });
