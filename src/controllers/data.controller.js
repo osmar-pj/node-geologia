@@ -105,8 +105,8 @@ export const getGroup = async (req, res) => {
             { title: 'Dominio', field: 'dominio', fn: '', und: '' },
             { title: 'Rango', field: 'rango', fn: '', und: '' },
             { title: 'Fecha de abastecimiento', field: 'date_abas', fn: '', und: '' },
-            { title: 'Semana', field: 'week', fn: 'hidden', und: '' },
-            { title: 'Nro. Mes', field: 'nro_month', fn: 'hidden', und: '' }
+            // { title: 'Semana', field: 'week', fn: 'hidden', und: '' },
+            // { title: 'Nro. Mes', field: 'nro_month', fn: 'hidden', und: '' }
         ]
         
         const staticColumns = [

@@ -134,8 +134,25 @@ export const updateListTrip = async (req, res) => {
             return res.status(200).json({ status: false, message: 'List Trip not found' })
         }
         const tripUpdated = await ListTripModel.findOneAndUpdate({_id: travel_Id}, req.body)
-        socket.io.emit('ControlCalidad', tripUpdated)
+        // socket.io.emit('ControlCalidad', tripUpdated)
         return res.status(200).json({ status: true, message: 'List Trip updated', data: tripUpdated })
+    } catch (error) {
+        res.json({ message: error.message });
+    }
+}
+
+export const updateManyTrip = async (req, res) => {
+    try {
+        // get cod_tableta
+        const tableta = req.body.cod_tableta
+        const rumas = await RumaModel.find({cod_tableta: tableta})
+        const rumasId = rumas.map((i) => {
+            return i._id
+        })
+        // update many
+        const tripsUpdated = await ListTripModel.updateMany({ruma: {$in: rumasId}}, req.body.data)
+        // socket.io.emit('ControlCalidad', tripUpdated)
+        return res.status(200).json({ status: true, message: 'List Trip updated', data: tripsUpdated })
     } catch (error) {
         res.json({ message: error.message });
     }
