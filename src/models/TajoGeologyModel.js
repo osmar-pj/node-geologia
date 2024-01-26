@@ -14,6 +14,6 @@ const TajoGeologySchema = new mongoose.Schema({
 }
 )
 
-const TajoGeologyModel = mongoose.model('tajo-geology', TajoGeologySchema)
+const TajoGeologyModel = mongoose.model('tajoGeology', TajoGeologySchema)
 
 export default TajoGeologyModel

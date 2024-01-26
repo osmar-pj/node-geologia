@@ -2,26 +2,33 @@ import mongoose from 'mongoose'
 
 const rumaSchema = new mongoose.Schema({
     ruma_Id: String,
-    data: JSON,
+    muestra: JSON,
+    ubication: String,
+    mining: String,
+    cod_tableta: String,
+    tajo: [],
+    dominio: String,
     ton: Number,
     tonh: Number,
+    ley_ag: Number,
+    tmh_ag: Number,
     statusBelong: String,
     statusTransition: String,
-    valid: Number,
+    valid: Boolean,
     rumas_united: JSON,
     travels: [
         {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'list-trip'
+            ref: 'listTrip'
         }
     ],
     n_travels: Number,
-    createdAt: {
-        type: Date,
-        default: Date.now
-    }
+    x: Number,
+    y: Number,
+    native: String
 },
 {
+    timestamps: true,
     versionKey: false,
 }
 )

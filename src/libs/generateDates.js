@@ -1,3 +1,6 @@
+import { readFileSync } from 'fs'
+import RumaModel from '../models/RumaModel.js'
+import ListTripModel from '../models/ListTripModel.js'
 import TajoGeologyModel from '../models/TajoGeologyModel.js'
 
 export const generateTajo = async (req, res) => {
@@ -45,6 +48,53 @@ export const generateTajo = async (req, res) => {
 
             await TajoGeologyModel.insertMany(tajos)
 
+        }
+    }
+    catch (error) {
+        res.json({ message: error.message })
+    }
+}
+
+export const generateTrip = async (req, res) => {
+    try {
+        const count = await ListTripModel.estimatedDocumentCount()
+        if (count == 0) {
+            const data = await readFileSync('src/libs/main.json', 'utf-8')
+            const trips = JSON.parse(data)
+            for (let i = 0; i < trips.length; i++) {
+                const newTrip = await new ListTripModel(trips[i])
+                newTrip.statusGeology = 'General'
+                newTrip.statusMina = 'Completo'
+                newTrip.validMina = true
+                newTrip.validGeology = true
+                // newTrip.tonh = newTrip.ton / newTrip.n_travels
+                await newTrip.save()
+            }
+            console.log('TRIPS SAVED')
+        }
+    } catch (error) {
+        
+    }
+}
+
+export const generateRumas = async (req, res) => {
+    try {
+        const count = await RumaModel.estimatedDocumentCount()
+        if (count == 0) {
+            const data = await readFileSync('src/libs/ruma.json', 'utf-8')
+            const ruma = JSON.parse(data)
+            for (let i = 0; i < ruma.length; i++) {
+                const newRuma = await new RumaModel(ruma[i])
+                newRuma.ruma_Id = newRuma.cod_tableta
+                newRuma.statusBelong = 'Single'
+                newRuma.statusTransition = 'Cancha Muestreo'
+                newRuma.valid = false
+                newRuma.x = 100
+                newRuma.y = 50
+                newRuma.native = 'CIA'
+                await newRuma.save()
+            }
+            console.log('RUMAS SAVED')
         }
     }
     catch (error) {

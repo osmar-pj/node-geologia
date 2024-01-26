@@ -1,16 +1,18 @@
+import http from 'http'
 import express from 'express'
 import morgan from 'morgan'
 import bodyParser from 'body-parser'
-
+import socket from './socket.js'
 import './database/db.js'
-
 import cors from 'cors'
 
 import { config } from 'dotenv'
 config()
 
-import { generateTajo } from './libs/generateDates.js'
+import { generateTajo, generateTrip, generateRumas } from './libs/generateDates.js'
 generateTajo()
+generateTrip()
+generateRumas()
 
 import listTripRoutes from './routes/list.trip.routes.js'
 import rumaRoutes from './routes/ruma.routes.js'
@@ -23,6 +25,7 @@ const app = express()
 
 const corsOptions = {
     origin: '*'
+    // origin: process.env.ORIGIN_URL_CLIENT
 }
 
 app.use(bodyParser.json({limit: '2gb', extended: true}))
@@ -44,6 +47,10 @@ app.get('/', (req, res) => {
     res.send({message : 'Welcome to the API GEOLOGY'})
 })
 
-app.listen(process.env.PORT, () => {
-    console.log('Server up running')
-})
+const httpServer = http.createServer(app)
+socket.connect(httpServer)
+httpServer.listen(process.env.PORT)
+
+// app.listen(process.env.PORT, () => {
+//     console.log('Server up running')
+// })

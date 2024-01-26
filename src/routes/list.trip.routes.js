@@ -4,11 +4,11 @@ import { getAllListTrip, getListTrip, getListTripQualityControl, getListTripGene
 
 const router = express.Router()
 
-router.get('/triplist', getAllListTrip)
+router.get('/triplist', getAllListTrip)  // Orecontrol
 router.get('/triplist/:travel_Id', getListTrip)
 
-router.get('/qualitycontrol', getListTripQualityControl)
-router.get('/general', getListTripGeneral)
+router.get('/qualitycontrol', getListTripQualityControl)  // Calidad
+router.get('/general', getListTripGeneral) // Lista general
 
 router.post('/triplist', createListTrip)
 
