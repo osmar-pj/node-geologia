@@ -86,8 +86,10 @@ export const generateRumas = async (req, res) => {
             for (let i = 0; i < ruma.length; i++) {
                 const newRuma = await new RumaModel(ruma[i])
                 newRuma.ruma_Id = newRuma.cod_tableta
-                newRuma.statusBelong = 'Single'
-                newRuma.statusTransition = 'Cancha Muestreo'
+                newRuma.samples = [{sample: ''}]
+                newRuma.statusTransition = 'Muestreo'
+                newRuma.statusBelong = 'No Belong'
+                newRuma.statusCumm = true
                 newRuma.valid = false
                 newRuma.x = 100
                 newRuma.y = 50

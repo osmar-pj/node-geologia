@@ -4,7 +4,7 @@ import axios from 'axios'
 
 export const getAllRumas = async (req, res) => {
     try {
-        const rumas = await RumaModel.find({valid: true, statusBelong: 'Single'}, { _id: 0, travels: 0, data: 0, rumas_united: 0})
+        const rumas = await RumaModel.find({valid: true, statusCumm: true}, { _id: 0, travels: 0, samples: 0, rumas_merged: 0 })
         return res.status(200).json(rumas)
         
     } catch (error) {
@@ -62,11 +62,12 @@ export const createRuma = async (req, res) => {
         const newRuma = new RumaModel({
             ruma_Id: newRumaId,
             valid: true,
-            statusBelong: 'Single',
+            statusBelong: 'No Belong',
             statusTransition: 'Cancha',
+            statusCumm: true,
             ton: 0,
             tonh: 0,
-            x: 50,
+            x: 100,
             y: 50,
             native: 'GUNJOP'
         });
@@ -107,7 +108,6 @@ export const deleteRuma = async (req, res) => {
         await RumaModel.deleteOne({ruma_Id: ruma_Id})
 
         return res.status(200).json({ status: true, message: 'Ruma deleted' })
-
     } catch (error) {
         res.json({ message: error.message });
     }
@@ -115,8 +115,10 @@ export const deleteRuma = async (req, res) => {
 
 export const getListRumas = async (req, res) => {
     try {
-        const rumas = await RumaModel.find({}, { data: 0 });
-        
+        const rumas = await RumaModel.find({statusTransition: {$ne: 'Planta'}, statusBelong: 'No Belong'}, { data: 0 });
+        const staticRUmas = rumas.filter(i => i.statusCumm === true)
+        const dynamicRumas = rumas.filter(i => i.statusCumm === false)
+        // 
         return res.status(200).json({rumas});
 
     } catch (error) {
@@ -134,7 +136,7 @@ export const updateOrCreateRumas = async (req, res) => {
         const n_travels = rumas.map(ruma => ruma.n_travels)
 
         const updateRumas = await Promise.all(rumas.map(async ruma => {
-            const updateRuma = await RumaModel.updateOne({ ruma_Id: ruma.ruma_Id }, { $set: { valid: 0, statusTransition: 'unido' } });
+            const updateRuma = await RumaModel.updateOne({ ruma_Id: ruma.ruma_Id }, { $set: { valid: 0, statusBelong: 'Belong' } });
             return updateRuma;
         }));
 
@@ -161,12 +163,12 @@ export const updateOrCreateRumas = async (req, res) => {
         const newRuma = new RumaModel({
             ruma_Id: newRumaId,
             valid: 1,
-            statusBelong: 'Multiple',
+            statusBelong: 'Belong',
             statusTransition: 'Planta',
             rumas_united: rumaIds,
             ton: ton.reduce((acc, cur) => acc + cur, 0),
             tonh: tonh.reduce((acc, cur) => acc + cur, 0),
-            n_travels: n_travels.reduce((acc, cur) => acc + cur, 0),
+            n_travels: n_travels.reduce((acc, cur) => acc + cur, 0)
         });
 
         await newRuma.save();

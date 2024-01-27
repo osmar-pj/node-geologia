@@ -56,29 +56,6 @@ export const createListTrips = async (req, res) => {
     }
 }
 
-export const getListGeology = async (req, res) => {
-    try {
-
-        const mining = req.query.mining;
-        const month = req.query.month;
-        const array = req.query.array;
-
-        // const array = ['year', 'month', 'mining', 'date_extraction']
-
-        // const response = await axios.get(`${process.env.FLASK_URL}/datageology?mining=${mining}&month=${month}`);
-
-        const response = await axios.get(`${process.env.FLASK_URL}/datageology`);
-        
-        // const response1 = await axios.get(`${process.env.FLASK_URL}/datageology?array=${array}`);
-        
-        const data = response.data;
-
-        return res.status(200).json(data);
-    } catch (error) {
-        res.json({ message: error.message });
-    }
-};
-
 export const getGroup = async (req, res) => {
     try {
 
@@ -121,14 +98,14 @@ export const getGroup = async (req, res) => {
 
         const filterColumns = columns.filter((col) => filtered.includes(col.field));
         const orderColumns = filtered.map((item) => filterColumns.find((col) => col.field === item));
-        console.log(filterColumns, orderColumns)
+        
         if (filtered.length === 0) {
-            const result = [...columns, ...staticColumns]
-            return res.status(200).json({status: true, data: data, columns: result});
+            const header = [...columns, ...staticColumns]
+            return res.status(200).json({status: true, data: data, header: header});
         } else {
 
-            const result = [...orderColumns, ...staticColumns];
-            return res.status(200).json({status: true, data: data, columns: result});
+            const header = [...orderColumns, ...staticColumns];
+            return res.status(200).json({status: true, data: data, header: header});
         }
 
 

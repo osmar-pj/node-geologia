@@ -8,9 +8,7 @@ router.get('/geology', getAllListTrip)
 
 router.post('/geology', createListTrips)
 
-router.get('/listgeology', getListGeology)
-
-router.post('/listgeology', getGroup)
+router.post('/listgeology', getGroup) // List
 
 router.get('/analysis', getDataAnalysis)
 

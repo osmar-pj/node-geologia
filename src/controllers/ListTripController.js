@@ -6,32 +6,26 @@ const socket = require('../socket').socket
 
 export const getAllListTrip = async (req, res) => {
     try {
-        // console.log(req.query)
-        // if (req.query.from == 'wagon') {
-        //     console.log('wagon')
-        //     return res.json({ message: 'Wagon' })
-        // } else if (req.query.from == 'truck') {
-        //     console.log('truck')
-        //     return res.json({ message: 'Truck' })
-        // } else {
-            
-        // }
-        // ORE CONTROL
-        // const listTrip = await ListTripModel.find({statusGeology: 'General'})
-        // console.log(listTrip.length)
-        // const response = await axios.get(`${process.env.FLASK_URL}/tripGeology`);
-        // const data = response.data
-        // const dataTotal = data.total
-        
         const listTrip = await ListTripModel.find({statusGeology: 'OreControl'})
         
-        // const dataTotalFiltered = dataTotal.filter((i) => {
-        //     return !listTrip.some((j) => {
-        //         return i.travel_Id === j.travel_Id
-        //     })
-        // })
-        // console.log(dataTotalFiltered)
-        return res.status(200).json(listTrip);
+        const header = [
+            { title: 'Año', field: 'year', fn: '', und: '' },
+            { title: 'Mes', field: 'month', fn: '', und: '' },
+            { title: 'Fecha', field: 'date', fn: '', und: '' },
+            { title: 'Estado', field: 'status', fn: '', und: '' },
+            { title: 'Ubicación', field: 'ubication', fn: '', und: '' },
+            { title: 'Turno', field: 'turn', fn: '', und: '' },
+            { title: 'Mina', field: 'mining', fn: '', und: '' },
+            { title: 'Vehiculo', field: 'tag', fn: '', und: '' },
+            { title: 'Nivel', field: 'level', fn: '', und: '' },
+            { title: 'Tipo', field: 'type', fn: '', und: '' },
+            { title: 'Veta', field: 'veta', fn: '', und: '' },
+            { title: 'Tajo', field: 'tajo', fn: '', und: '' }
+            // { title: 'Semana', field: 'week', fn: 'hidden', und: '' },
+            // { title: 'Nro. Mes', field: 'nro_month', fn: 'hidden', und: '' }
+        ]
+
+        return res.status(200).json({status: true, data: listTrip, header: header});
     } catch (error) {
         res.json({ message: error.message });
     }
@@ -68,35 +62,6 @@ export const getListTripGeneral = async (req, res) => {
         if(!listTrip) {
             return res.status(404).json({ message: 'List Trip not found' })
         }
-        // const response2 = await axios.get(`${process.env.FLASK_URL}/list_geology`)
-        // const data2 = response2.data
-        // const dataFormatted = data2.map((i) => {
-        //     return {
-        //         travel_Id: i.travel_Id,
-        //         fecha: i.date_extraction,
-        //         hora: '',
-        //         turno: i.turn,
-        //         operador: '',
-        //         vehiculo: '',
-        //         vagones: '',
-        //         mina: i.mining,
-        //         tipo: i.type,
-        //         tajo: i.tajo,
-        //         ton: i.ton,
-        //         tonh: i.tonh,
-        //         material: i.dominio,
-        //         ruma: i.cod_tableta,
-        //         ley_ag: i.ley_ag,
-        //         ley_fe: i.ley_fe,
-        //         ley_mn: i.ley_mn,
-        //         ley_pb: i.ley_pb,
-        //         ley_zn: i.ley_zn,
-        //         statusMina: 'Completo',
-        //         validMina: true,
-        //         statusGeology: 'General',
-        //         validGeology: true
-        //     }
-        // })
         return res.status(200).json(listTrip)
     } catch (error) {
         res.json({ message: error.message });
@@ -119,6 +84,8 @@ export const createListTrip = async (req, res) => {
             const tripSaved = await newListTrip.save();
             socket.io.emit('OreControl', tripSaved)
         }
+        // Aumentar Rumas donde aplique
+
         return res.status(200).json({ status: true, message: 'List Trip created successfully' });
     } catch (error) {
         res.json({ message: error.message });

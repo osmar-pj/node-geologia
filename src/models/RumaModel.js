@@ -2,8 +2,8 @@ import mongoose from 'mongoose'
 
 const rumaSchema = new mongoose.Schema({
     ruma_Id: String,
-    muestra: JSON,
-    ubication: String,
+    samples: [],
+    ubication: String, // Cancha 1/ Cancha 2/ Cancha 3
     mining: String,
     cod_tableta: String,
     tajo: [],
@@ -12,10 +12,16 @@ const rumaSchema = new mongoose.Schema({
     tonh: Number,
     ley_ag: Number,
     tmh_ag: Number,
-    statusBelong: String,
-    statusTransition: String,
+    statusTransition: String, // Cancha (variable) /Muestreo (static,variable) /Planta (static)
+    statusCumm: Boolean, // static (false) / variable (true)
     valid: Boolean,
-    rumas_united: JSON,
+    statusBelong: String,
+    rumas_merged: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'ruma'
+        }
+    ],
     travels: [
         {
             type: mongoose.Schema.Types.ObjectId,
