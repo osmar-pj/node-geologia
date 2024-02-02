@@ -1,52 +1,28 @@
 import { readFileSync } from 'fs'
-import RumaModel from '../models/RumaModel.js'
-import ListTripModel from '../models/ListTripModel.js'
-import TajoGeologyModel from '../models/TajoGeologyModel.js'
+import PilaModel from '../models/PilaModel.js'
+import TripModel from '../models/TripModel.js'
+import TajoModel from '../models/TajoModel.js'
 
 export const generateTajo = async (req, res) => {
     try {
-        const count = await TajoGeologyModel.estimatedDocumentCount()
-
+        const count = await TajoModel.estimatedDocumentCount()
+        
         if (count == 0) {
-
-            const tajosData = [
-                { name: 'TJ6383', valid: 1 },
-                { name: 'TJ6430', valid: 1 },
-                { name: 'TJ6431', valid: 1 },
-                { name: 'TJ6431-1', valid: 1 },
-                { name: 'TJ6432', valid: 1 },
-                { name: 'TJ6432-1', valid: 1 },
-                { name: 'TJ6488', valid: 1 },
-                { name: 'TJ6490-1', valid: 1 },
-                { name: 'TJ6506', valid: 1 },
-                { name: 'TJ6507', valid: 1 },
-                { name: 'TJ6508', valid: 1 },
-                { name: 'TJ6543', valid: 1 },
-                { name: 'TJ6544', valid: 1 },
-                { name: 'TJ6608', valid: 1 },
-                { name: 'TJ6609', valid: 1 },
-                { name: 'TJ6613', valid: 1 },
-                { name: 'TJ6614', valid: 1 },
-                { name: 'TJ6618', valid: 1 },
-                { name: 'TJ6660', valid: 1 },
-                { name: 'TJ6662', valid: 1 },
-                { name: 'TJ6790', valid: 1 },
-                { name: 'TJ7090', valid: 1 },
-                { name: 'TJ7090-1', valid: 1 },
-                { name: 'TJ7390', valid: 1 },
-                { name: 'TJ7392', valid: 1 },
-                { name: 'TJ7393', valid: 1 }
-            ];
-
-            const tajos = tajosData.map((tajo, index) => {
+            const data = await readFileSync('src/libs/tajos.json', 'utf-8')
+            const tajosData = JSON.parse(data)
+            const tajos = tajosData.map((item, index) => {
                 return {
                     tajoId: index + 1,
-                    name: tajo.name,
-                    valid: tajo.valid
+                    name: item.tajo,
+                    valid: true,
+                    level: item.level,
+                    veta: item.veta,
+                    mineral: item.mineral,
+                    zona: item.zona
                 }
             })
-
-            await TajoGeologyModel.insertMany(tajos)
+            await TajoModel.insertMany(tajos)
+            console.log('TAJOS SAVED')
 
         }
     }
@@ -57,17 +33,15 @@ export const generateTajo = async (req, res) => {
 
 export const generateTrip = async (req, res) => {
     try {
-        const count = await ListTripModel.estimatedDocumentCount()
+        const count = await TripModel.estimatedDocumentCount()
         if (count == 0) {
             const data = await readFileSync('src/libs/main.json', 'utf-8')
             const trips = JSON.parse(data)
             for (let i = 0; i < trips.length; i++) {
-                const newTrip = await new ListTripModel(trips[i])
-                newTrip.statusGeology = 'General'
+                const newTrip = await new TripModel(trips[i])
+                newTrip.statusTrip = newTrip.status == 'Cancha' ? 'Muestreado' : 'Despachando'
                 newTrip.statusMina = 'Completo'
-                newTrip.validMina = true
-                newTrip.validGeology = true
-                // newTrip.tonh = newTrip.ton / newTrip.n_travels
+                newTrip.splitRequired = false
                 await newTrip.save()
             }
             console.log('TRIPS SAVED')
@@ -79,24 +53,53 @@ export const generateTrip = async (req, res) => {
 
 export const generateRumas = async (req, res) => {
     try {
-        const count = await RumaModel.estimatedDocumentCount()
+        const count = await PilaModel.estimatedDocumentCount()
         if (count == 0) {
-            const data = await readFileSync('src/libs/ruma.json', 'utf-8')
-            const ruma = JSON.parse(data)
-            for (let i = 0; i < ruma.length; i++) {
-                const newRuma = await new RumaModel(ruma[i])
-                newRuma.ruma_Id = newRuma.cod_tableta
-                newRuma.samples = [{sample: ''}]
-                newRuma.statusTransition = 'Muestreo'
-                newRuma.statusBelong = 'No Belong'
-                newRuma.statusCumm = true
-                newRuma.valid = false
-                newRuma.x = 100
-                newRuma.y = 50
-                newRuma.native = 'CIA'
-                await newRuma.save()
+            const data = await readFileSync('src/libs/pila.json', 'utf-8')
+            const pilas = JSON.parse(data)
+            for (let i = 0; i < pilas.length; i++) {
+                const newPila = await new PilaModel(pilas[i])
+                newPila.pila = newPila.cod_tableta
+                newPila.cod_tableta = newPila.cod_tableta
+                newPila.samples = [{Muestra: ''}]
+                newPila.typePila = 'Pila'
+                newPila.statusPila = newPila.status == 'Cancha' ? 'Muestreado' : 'Despachado'
+                newPila.actionPila = newPila.status == 'Cancha' ? 'Muestreado' : 'Listo para despachar'
+                newPila.statusBelong = 'No Belong'
+                newPila.x = 100
+                newPila.y = 50
+                newPila.native = 'CIA'
+                newPila.stock = newPila.tonh
+                await newPila.save()
             }
-            console.log('RUMAS SAVED')
+            console.log('PILAS SAVED')
+            // Create 4 gibas called G1, G2, G3, G4
+            const gibas = [
+                { name: 'G1' },
+                { name: 'G2' },
+                { name: 'G3' },
+                { name: 'G4' }
+            ]
+            const gibasSaved = gibas.forEach(async (giba, index) => {
+                const newPila = await new PilaModel(giba)
+                newPila.pila = giba.name
+                newPila.mining = 'UCHUCCHACUA',
+                newPila.ubication = 'Cancha 2'
+                newPila.samples = [{Muestra: ''}]
+                newPila.typePila = 'Giba'
+                newPila.statusPila = 'Creado'
+                newPila.actionPila = 'Acumulando'
+                newPila.statusBelong = 'No Belong'
+                newPila.x = 120
+                newPila.y = 70
+                newPila.native = 'CIA'
+                newPila.stock = 0
+                newPila.tonh = 0
+                newPila.ton = 0
+                
+                await newPila.save()
+            })
+            console.log('GIBAS SAVED')
         }
     }
     catch (error) {

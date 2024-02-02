@@ -10,6 +10,8 @@ router.post('/geology', createListTrips)
 
 router.post('/listgeology', getGroup) // List
 
+router.get('/listgeology', getListGeology) // List
+
 router.get('/analysis', getDataAnalysis)
 
 export default router

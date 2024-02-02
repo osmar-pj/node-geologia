@@ -1,25 +1,34 @@
 import axios from 'axios'
 
-import ListTripModel from '../models/ListTripModel.js'
-import RumaModel from '../models/RumaModel.js'
+import TripModel from '../models/TripModel.js'
+import PilaModel from '../models/PilaModel.js'
 
 export const getAllListTrip = async (req, res) => {
     try {
         const response = await axios.get(`${process.env.FLASK_URL}/tripGeology`);
         const data = response.data;
-
         const dataTotal = data.total
-
-        const listTrip = await ListTripModel.find({}, { createdAt: 0 })
-
+        const listTrip = await TripModel.find({}, { createdAt: 0 })
         const dataTotalFiltered = dataTotal.filter((i) => {
             return !listTrip.some((j) => {
                 return i.travel_Id === j.travel_Id
             })
         })
-
         return res.status(200).json(dataTotalFiltered);
+    } catch (error) {
+        res.json({ message: error.message });
+    }
+};
 
+export const getListGeology = async (req, res) => {
+    try {
+
+        const mining = req.query.mining;
+        const month = req.query.month;
+        const array = req.query.array;
+        const response = await axios.get(`${process.env.FLASK_URL}/datageology`);
+        const data = response.data;
+        return res.status(200).json(data);
     } catch (error) {
         res.json({ message: error.message });
     }
@@ -28,14 +37,13 @@ export const getAllListTrip = async (req, res) => {
 export const createListTrips = async (req, res) => {
     try {
         const { travel_Id, fecha, hora, turno, operador, vehiculo, vagones, mina, tipo, tajo, ton, tonh, material, ruma, ley_ag, ley_fe, ley_mn, ley_pb, ley_zn, fecha_abast, datetime, statusMina, validMina, statusGeology, validGeology } = req.body;
-
-        const existingRecord = await ListTripModel.findOne({ travel_Id });
+        const existingRecord = await TripModel.findOne({ travel_Id });
 
         if (existingRecord) {
             return res.status(200).json({ status: false, message: 'Este viaje ya está registrado' });
         }
 
-        const newListTrip = new ListTripModel({ travel_Id, fecha, hora, turno, operador, vehiculo, vagones, mina, tipo, tajo, ton, tonh, material, ruma, ley_ag, ley_fe, ley_mn, ley_pb, ley_zn, fecha_abast, datetime, statusMina, validMina, statusGeology, validGeology });
+        const newListTrip = new TripModel({ travel_Id, fecha, hora, turno, operador, vehiculo, vagones, mina, tipo, tajo, ton, tonh, material, ruma, ley_ag, ley_fe, ley_mn, ley_pb, ley_zn, fecha_abast, datetime, statusMina, validMina, statusGeology, validGeology });
 
         if (ruma) {
             const rumas = await RumaModel.findOne({ ruma_Id: ruma });
@@ -58,19 +66,14 @@ export const createListTrips = async (req, res) => {
 
 export const getGroup = async (req, res) => {
     try {
-
         const response = await axios.post(`${process.env.FLASK_URL}/analysis`, req.body);
 
         const data = response.data;
         const filtered = req.body.arr
-
-        // const filtered = ['veta', 'tajo', 'type']
-        // const datos = ['month', 'date_extraction', 'year', 'status', 'ubication', 'turn', 'mining', 'level', 'type', 'veta', 'tajo', 'dominio', 'ton', 'tonh', 'ley_ag', 'ley_fe', 'ley_mn', 'ley_pb', 'ley_zn', 'rango', 'date_abas', 'week', 'nro_month']
-
         const columns = [
             { title: 'Año', field: 'year', fn: '', und: '' },
             { title: 'Mes', field: 'month', fn: '', und: '' },
-            { title: 'Fecha', field: 'date', fn: '', und: '' },
+            { title: 'Fecha', field: 'date', fn: 'date', und: '' },
             { title: 'Estado', field: 'status', fn: '', und: '' },
             { title: 'Ubicación', field: 'ubication', fn: '', und: '' },
             { title: 'Turno', field: 'turn', fn: '', und: '' },
@@ -81,9 +84,7 @@ export const getGroup = async (req, res) => {
             { title: 'Tajo', field: 'tajo', fn: '', und: '' },
             { title: 'Dominio', field: 'dominio', fn: '', und: '' },
             { title: 'Rango', field: 'rango', fn: '', und: '' },
-            { title: 'Fecha de abastecimiento', field: 'date_abas', fn: '', und: '' },
-            // { title: 'Semana', field: 'week', fn: 'hidden', und: '' },
-            // { title: 'Nro. Mes', field: 'nro_month', fn: 'hidden', und: '' }
+            { title: 'Fecha de abastecimiento', field: 'date_abas', fn: 'date', und: '' }
         ]
         
         const staticColumns = [

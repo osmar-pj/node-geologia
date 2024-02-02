@@ -14,9 +14,9 @@ generateTajo()
 generateTrip()
 generateRumas()
 
-import listTripRoutes from './routes/list.trip.routes.js'
-import rumaRoutes from './routes/ruma.routes.js'
-import tajoGeologyRoutes from './routes/tajo.geology.routes.js'
+import tripRoutes from './routes/trip.routes.js'
+import pilaRoutes from './routes/pila.routes.js'
+import tajoRoutes from './routes/tajo.routes.js'
 import authRoutes from './routes/auth.routes.js'
 
 import dataRoutes from './routes/data.routes.js'
@@ -34,9 +34,9 @@ app.use(cors(corsOptions))
 app.use(express.json())
 
 const routes = [
-    listTripRoutes,
-    rumaRoutes,
-    tajoGeologyRoutes,
+    tripRoutes,
+    pilaRoutes,
+    tajoRoutes,
     authRoutes,
     dataRoutes
 ]
