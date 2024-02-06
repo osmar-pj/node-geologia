@@ -36,7 +36,7 @@ const tripSchema = new mongoose.Schema({
     rango: String,
     timestamp: Number,
     dateCreatedAt: Date,
-    date_abas: Date,
+    dateSupply: Date,
     week: Number,
     nro_month: Number,
     cod_despacho: String,
@@ -57,7 +57,11 @@ const tripSchema = new mongoose.Schema({
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Trip'
         }
-    ]
+    ],
+    temp: {
+        default: 0,
+        type: Number
+    },
 },
 {
     timestamps: true,

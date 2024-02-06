@@ -20,18 +20,21 @@ export const getListTrip = async (req, res) => {
 // ORE CONTROL
 export const getOreControlList = async (req, res) => {
     try {
-        const trips = await TripModel.find({$or : [{statusGeology: 'OreControl'}, {statusGeology: 'Giba'}], validGeology: true})
+        // find where option 1 and option 2
+        const trips = await TripModel.find({$or: [{statusTrip: 'waitComplete'}, {statusTrip: 'waitSplit'}]}).limit(20)
+        // console.log(trips)
         if (!trips) {
             return res.status(404).json({ message: 'Ore Control sin pendientes' })
         }
         
         const header = [
-            { title: 'Id', field: '_id', fn: '', und: '' },
+            // { title: 'Id', field: '_id', fn: '', und: '' },
             { title: 'Año', field: 'year', fn: '', und: '' },
             { title: 'Mes', field: 'month', fn: '', und: '' },
             { title: 'Fecha', field: 'date', fn: 'date', und: '' },
             { title: 'Estado', field: 'status', fn: '', und: '' },
-            { title: 'Ubicación', field: 'ubication', fn: 'arr', und: '' },
+            { title: 'Ubicación', field: 'ubication', fn: '', und: '' },
+            { title: 'Pila', field: 'destiny', fn: 'arr', und: '' },
             { title: 'Turno', field: 'turn', fn: '', und: '' },
             { title: 'Vagones', field: 'vagones', fn: '', und: '' },
             { title: 'Mina', field: 'mining', fn: '', und: '' },
@@ -39,7 +42,8 @@ export const getOreControlList = async (req, res) => {
             { title: 'Veta', field: 'veta', fn: '', und: '' },
             { title: 'Tipo', field: 'type', fn: '', und: '' },
             { title: 'Tajo', field: 'tajo', fn: '', und: '' },
-            { title: 'Dominio', field: 'dominio', fn: 'arr', und: '' }
+            { title: 'Dominio', field: 'dominio', fn: 'arr', und: '' },
+            { title: 'Transition', field: 'statusPila', fn: '', und: '' }
         ]
         return res.status(200).json({status: true, data: trips, header: header});
     } catch (error) {
@@ -47,12 +51,11 @@ export const getOreControlList = async (req, res) => {
     }
 };
 
-// CONTROL CALIDAD
+// CONTROL CALIDAD isPilas esta enviando Pilas
 export const getListTripQualityControl = async (req, res) => {
     try {
-        // const pilas = await PilaModel.find({status: 'Muestreo'})
-        const pilas = await PilaModel.find({}).sort({createdAt: -1})
-        // console.log(pilas[0])
+        const pilas = await PilaModel.find({statusPila: {$ne: 'Finalizado'}}).sort({createdAt: -1})
+        // console.log(pilas)
         if(!pilas) {
             return res.status(404).json({ message: 'Control calidad sin pendientes' })
         }
@@ -69,14 +72,15 @@ export const getListTripQualityControl = async (req, res) => {
             { title: 'Dominio', field: 'dominio', fn: '', und: '' },
             { title: 'Cod. Tableta', field: 'cod_tableta', fn: '', und: '' },
             { title: 'Cod. Despacho', field: 'cod_despacho', fn: '', und: '' },
+            { title: 'Fecha. Abastecimiento', field: 'dateSupply', fn: '', und: '' },
 
             { title: 'Stock mineral', field: 'stock', fn: 'fixed', und: 'TMH' },
             { title: 'Ton. Total', field: 'tonh', fn: 'fixed', und: 'TMH' },
-            { title: 'Ley', field: 'ley_ag', fn: 'fixed', und: '' },
-            { title: 'Ley', field: 'ley_fe', fn: 'fixed', und: '' },
-            { title: 'Ley', field: 'ley_mn', fn: 'fixed', und: '' },
-            { title: 'Ley', field: 'ley_pb', fn: 'fixed', und: '' },
-            { title: 'Ley', field: 'ley_zn', fn: 'fixed', und: '' },
+            { title: 'Ley Ag', field: 'ley_ag', fn: 'fixed', und: '' },
+            { title: 'Ley Fe', field: 'ley_fe', fn: 'fixed', und: '' },
+            { title: 'Ley Mn', field: 'ley_mn', fn: 'fixed', und: '' },
+            { title: 'Ley Pb', field: 'ley_pb', fn: 'fixed', und: '' },
+            { title: 'Ley Zn', field: 'ley_zn', fn: 'fixed', und: '' },
             // { title: 'Ton*Ley', field: 'tmh_ag', fn: 'fixed', und: '' }
         ]
 
@@ -85,17 +89,17 @@ export const getListTripQualityControl = async (req, res) => {
         res.json({ message: error.message });
     }
 }
-// GENERAL LIST
+// GENERAL LIST ALL (falta trabajar el inifinity scroll)
 export const getListTripGeneral = async (req, res) => {
     try {
-        const trips = await TripModel.find({validGeology: true}).sort({createdAt: -1}).limit(20)
+        const trips = await TripModel.find({}).sort({createdAt: -1}).limit(30)
         if(!trips) {
             return res.status(404).json({ message: 'Trip not found' })
         }
         const data = trips
         const filtered = req.body.arr
         const columns = [
-            { title: 'Id', field: '_id', fn: '', und: '' },
+            // { title: 'Id', field: '_id', fn: '', und: '' },
             { title: 'Año', field: 'year', fn: '', und: '' },
             { title: 'Mes', field: 'month', fn: '', und: '' },
             { title: 'Fecha', field: 'date', fn: 'date', und: '' },
@@ -104,7 +108,7 @@ export const getListTripGeneral = async (req, res) => {
             { title: 'Pila', field: 'pila', fn: '', und: '' },
             { title: 'Tableta', field: 'cod_tableta', fn: '', und: '' },
             { title: 'Turno', field: 'turn', fn: '', und: '' },
-            { title: 'Status', field: 'statusGeology', fn: '', und: '' },
+            { title: 'Status', field: 'statusTrip', fn: 'status', und: '' },
             { title: 'Mina', field: 'mining', fn: '', und: '' },
             { title: 'Nivel', field: 'level', fn: '', und: '' },
             { title: 'Tipo', field: 'type', fn: '', und: '' },
@@ -112,7 +116,7 @@ export const getListTripGeneral = async (req, res) => {
             { title: 'Tajo', field: 'tajo', fn: '', und: '' },
             { title: 'Dominio', field: 'dominio', fn: 'arr', und: '' },
             { title: 'Rango', field: 'rango', fn: '', und: '' },
-            { title: 'Fecha de abastecimiento', field: 'date_abas', fn: 'date', und: '' }
+            { title: 'Fecha de abastecimiento', field: 'dateSupply', fn: 'date', und: '' }
         ]
         
         const staticColumns = [
@@ -186,7 +190,8 @@ export const updateListTrip = async (req, res) => {
             // ACTUALIZAR TRIP CAMION
             for (let i = 0; i < data.length; i++) {
                 const tajo = await TajoModel.findOne({name: data[i].tajo})
-                data[i].statusTrip = 'Actualizado'
+                data[i].statusTrip = 'waitBeginAnalysis'
+                data[i].history = [...trip.history, {work: 'waitBeginAnalysis', date: new Date(), user: data.userId}]
                 data[i].veta = tajo ? tajo.veta : "V_CACHIPAMPA"
                 data[i].level = tajo ? tajo.level : 3920
                 const tripUpdate = await TripModel.findOneAndUpdate({_id: travel_Id}, data[i], {new: true})
@@ -198,7 +203,6 @@ export const updateListTrip = async (req, res) => {
                 pila.tonh = pila.tonh + trip.tonh
                 pila.ton = pila.ton + trip.tonh * 0.94
                 const pilaUpdated = await PilaModel.findOneAndUpdate({_id: pila._id}, {stock: pila.stock, tonh: pila.tonh, ton: pila.ton, travels: pila.travels}, {new: true})
-                // console.log('CAMION PILA UPDATED', pilaUpdated)
                 socket.io.emit('pilas', [pilaUpdated])
             }
             // console.log('UPDATED MANY', tripUpdated)
@@ -212,7 +216,8 @@ export const updateListTrip = async (req, res) => {
             for (let i = 0; i < data.length; i++) {
                 const tajo = await TajoModel.findOne({name: data[i].tajo})
                 const newTrip = await new TripModel(data[i])
-                newTrip.statusTrip = 'Actualizado'
+                newTrip.statusTrip = 'waitBeginAnalysis'
+                newTrip.history = [...trip.history, {work: 'waitBeginAnalysis', date: new Date(), user: data.userId}]
                 newTrip.splitRequired = false
                 newTrip.level = tajo ? tajo.level : null
                 newTrip.veta = tajo ? tajo.veta : null
@@ -238,7 +243,7 @@ export const updateListTrip = async (req, res) => {
                 socket.io.emit('OreControl', tripSaved)
             }
            
-            const tripUpdatedFalse = await TripModel.findOneAndUpdate({_id: travel_Id}, {validGeology: false, splitRequired: false, statusGeology: 'Splitted', trips: newTrips.map(i => i._id) }, {new: true})
+            const tripUpdatedFalse = await TripModel.findOneAndUpdate({_id: travel_Id}, { splitRequired: false, statusTrip: 'Dividido', trips: newTrips.map(i => i._id) }, {new: true}) // Para que no se muestre en OreControl
             socket.io.emit('RemoveList', tripUpdatedFalse)
             // UPDATE PILA
             const pilasToUpdate = await newTrips.map(async (i) => {
@@ -260,11 +265,14 @@ export const updateListTrip = async (req, res) => {
         if (!isCamion && !isSplitRequired) {
             const promiseTrips = data.map(async (i) => {
                 const tajo = await TajoModel.findOne({name: i.tajo})
-                i.statusTrip = 'Actualizado'
-                i.level = tajo ? tajo.level : 3920
-                i.veta = tajo ? tajo.veta : "V_CACHIPAMPA"
-                i.zone = tajo ? tajo.zone : "Socorro Bajo"
-                const tripUpdated = await TripModel.findOneAndUpdate({_id: travel_Id}, i, {new: true})
+                const dataToUpdate = {
+                    statusTrip: 'waitBeginAnalysis',
+                    history: [...trip.history, {work: 'waitBeginAnalysis', date: new Date(), user: data.userId}],
+                    level: tajo ? tajo.level : 3920,
+                    veta: tajo ? tajo.veta : "V_CACHIPAMPA",
+                    zone: tajo ? tajo.zone : "Socorro Bajo"
+                }
+                const tripUpdated = await TripModel.findOneAndUpdate({_id: travel_Id}, dataToUpdate, {new: true})
                 return tripUpdated
             })
             const tripUpdate = await Promise.all(promiseTrips)

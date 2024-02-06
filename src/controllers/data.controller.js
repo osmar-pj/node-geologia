@@ -22,7 +22,6 @@ export const getAllListTrip = async (req, res) => {
 
 export const getListGeology = async (req, res) => {
     try {
-
         const mining = req.query.mining;
         const month = req.query.month;
         const array = req.query.array;
@@ -118,11 +117,11 @@ export const getGroup = async (req, res) => {
 export const getDataAnalysis = async (req, res) => {
     try {
         const ts = Math.round(req.query.ts / 1000)
-        const mining = req.query.mining
-        const response = await axios.get(`${process.env.FLASK_URL}/analysis2?ts=${ts}&mining=${mining}`);
+        // const mining = req.query.mining
+        const response = await axios.get(`${process.env.FLASK_URL}/analysis2?ts=${ts}`);
         const data = response.data.result;
         const meta = response.data.meta;
-        
+        console.log(data, meta)
         return res.status(200).json({status: true, data, meta});
 
     } catch (error) {

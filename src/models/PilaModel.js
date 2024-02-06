@@ -59,7 +59,8 @@ const pilaSchema = new mongoose.Schema({
     stock: {
         default: 0,
         type: Number
-    }
+    },
+    dateSupply: Date
 },
 {
     timestamps: true,

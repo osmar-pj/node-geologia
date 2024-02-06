@@ -63,8 +63,8 @@ export const generateRumas = async (req, res) => {
                 newPila.cod_tableta = newPila.cod_tableta
                 newPila.samples = [{Muestra: ''}]
                 newPila.typePila = 'Pila'
-                newPila.statusPila = newPila.status == 'Cancha' ? 'Muestreado' : 'Despachado'
-                newPila.actionPila = newPila.status == 'Cancha' ? 'Muestreado' : 'Listo para despachar'
+                newPila.statusPila = newPila.status == 'Cancha' ? 'waitBeginDespacho' : 'Finalizado'
+                newPila.history = [{work: 'Creado', date: new Date(), user: 'System'}]
                 newPila.statusBelong = 'No Belong'
                 newPila.x = 100
                 newPila.y = 50
@@ -85,13 +85,13 @@ export const generateRumas = async (req, res) => {
                 newPila.pila = giba.name
                 newPila.mining = 'UCHUCCHACUA',
                 newPila.ubication = 'Cancha 2'
-                newPila.samples = [{Muestra: ''}]
+                newPila.samples = []
                 newPila.typePila = 'Giba'
-                newPila.statusPila = 'Creado'
-                newPila.actionPila = 'Acumulando'
+                newPila.statusPila = 'Acumulando'
+                newPila.history = [{work: 'Creado', date: new Date(), user: 'System'}]
                 newPila.statusBelong = 'No Belong'
                 newPila.x = 120
-                newPila.y = 70
+                newPila.y = 60
                 newPila.native = 'CIA'
                 newPila.stock = 0
                 newPila.tonh = 0

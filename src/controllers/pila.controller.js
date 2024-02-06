@@ -3,11 +3,37 @@ import PilaModel from '../models/PilaModel.js'
 
 const socket = require('../socket.js').socket
 
+// GET PILAS TO SHOW IN MODAL ORE CONTROL
 export const getAllPilas = async (req, res) => {
     try {
-        const pilas = await PilaModel.find({statusCumm: true}, { _id: 0, travels: 0})
-        const pilasAvailable = pilas.filter(pila => pila.statusTransition != 'Transition' && pila.statusTransition != 'Planta' && pila.statusTransition != 'Muestreo')
-        return res.status(200).json({pilas, pilasAvailable})
+        const pilas = await PilaModel.find({}).sort({createdAt: -1})
+        const pilasToOreControl = await PilaModel.find({statusPila: 'Acumulando', typePila: 'Pila'}).sort({createdAt: -1})
+        // console.log(pilas)
+        if(!pilas) {
+            return res.status(404).json({ message: 'Control calidad sin pendientes' })
+        }
+        const header = [
+            { title: 'Mina', field: 'mining', fn: '', und: '' },
+            { title: 'Ubicación', field: 'ubication', fn: '', und: '' },
+            { title: 'Pila', field: 'pila', fn: '', und: '' },
+            { title: 'Viajes', field: 'travels', fn: 'count', und: '' }, // contar el array para tener los viaje
+            { title: 'Status', field: 'statusPila', fn: 'status', und: '' },
+            { title: 'Tajo', field: 'tajo', fn: 'arr', und: '' },
+            { title: 'Dominio', field: 'dominio', fn: '', und: '' },
+            { title: 'Cod. Tableta', field: 'cod_tableta', fn: '', und: '' },
+            { title: 'Cod. Despacho', field: 'cod_despacho', fn: '', und: '' },
+            { title: 'Fecha. Abastecimiento', field: 'dateSupply', fn: '', und: '' },
+
+            { title: 'Stock mineral', field: 'stock', fn: 'fixed', und: 'TMH' },
+            { title: 'Ton. Total', field: 'tonh', fn: 'fixed', und: 'TMH' },
+            { title: 'Ley Ag', field: 'ley_ag', fn: 'fixed', und: '' },
+            { title: 'Ley Fe', field: 'ley_fe', fn: 'fixed', und: '' },
+            { title: 'Ley Mn', field: 'ley_mn', fn: 'fixed', und: '' },
+            { title: 'Ley Pb', field: 'ley_pb', fn: 'fixed', und: '' },
+            { title: 'Ley Zn', field: 'ley_zn', fn: 'fixed', und: '' },
+        ]
+
+        return res.status(200).json({status: true, data: pilas, header: header, pilasToOreControl: pilasToOreControl})
     } catch (error) {
         res.json({ message: error.message })
     }
@@ -56,8 +82,9 @@ export const createPila = async (req, res) => {
             mining: mining,
             ubication: mining === 'YUMPAG' ? 'Cancha Colquicocha' : 'Cancha 2',
             statusBelong: 'No Belong',
-            statusPila: 'Creado',
-            actionPila: 'Acumulando',
+            typePila: 'Pila',
+            statusPila: 'Acumulando',
+            history: [{work: 'Creado', date: new Date(), user: 'System'}],
             ton: 0,
             tonh: 0,
             x: 100,
@@ -94,30 +121,236 @@ const rango = (ley) => {
     }
 }
 
+const newPila = async (pila) => {
+    try {
+        const lastPila = await PilaModel.findOne({native: 'GUNJOP'}).sort({ _id: -1 }).limit(1)
+            let newPilaId
+            if (lastPila) {
+                const currentYear = new Date().getFullYear()
+                const lastPilaYear = new Date(lastPila.createdAt).getFullYear()
+                let newPilaNumber
+                if (currentYear === lastPilaYear) {
+                    const lastPilaNumber = parseInt(lastPila.pila.split('-')[1], 10)
+                    newPilaNumber = lastPilaNumber + 1
+                } else {
+                    newPilaNumber = 1
+                }
+                // ultimas 2 cifras de currentYear
+                const year = currentYear.toString().slice(-2)
+                newPilaId = `P${year}-${('00' + newPilaNumber).slice(-3)}`
+            } else {
+                newPilaId = 'P24-001'
+            }
+            const newPila = new PilaModel({
+                // Se crea desde el viaje de un camion
+                pila: newPilaId,
+                cod_tableta: newPilaId,
+                valid: true,
+                mining: 'UCHUCCHACUA',
+                ubication: 'Cancha 2',
+                statusBelong: 'No Belong',
+                typePila: 'Pila',
+                statusPila: 'Analizando',
+                history: [...pila.history, {work: 'Giba cambia a Pila y analiza', date: new Date(), user: 'System'}],
+                ton: pila.ton,
+                tonh: pila.tonh,
+                x: 100,
+                y: 50,
+                native: 'GUNJOP',
+                stock: pila.stock,
+                travels: pila.travels,
+                samples: pila.samples,
+                tajo: pila.tajo,
+                cood_despacho: pila.cood_despacho,
+                ley_ag: pila.ley_ag,
+                ley_fe: pila.ley_fe,
+                ley_mn: pila.ley_mn,
+                ley_pb: pila.ley_pb,
+                ley_zn: pila.ley_zn
+            })
+            const newPilaSaved = await newPila.save()
+            socket.io.emit('ControlCalidad', [newPilaSaved])
+            return newPilaSaved
+    } catch (error) {
+        console.error(error)
+    }
+}
+
+const resetGiba = async (pilaId) => {
+    try {
+        const pilaToUpdate = {
+            statusTrip: 'Acumulando',
+            history: [{work: 'Limpiado', date: new Date(), user: 'System'}],
+            ton: 0,
+            tonh: 0,
+            stock: 0,
+            ley_ag: 0,
+            ley_fe: 0,
+            ley_mn: 0,
+            ley_pb: 0,
+            ley_zn: 0,
+            rango: '',
+            dominio: '',
+            level: 0,
+            type: '',
+            veta: '',
+            tajo: [],
+            zone: '',
+            travels: [],
+            samples: []
+        }
+        const updatePila = await PilaModel.findOneAndUpdate({_id: pilaId}, pilaToUpdate, {new: true})
+        socket.io.emit('pilas', [updatePila])
+        return {msg: 'Giba reseteado'}
+    } catch (error) {
+        console.error(error)
+    }
+}
+
 export const updatePila = async (req, res) => {
     try {
         const pila_Id = req.params.pila_Id
-        const pilaUpdated = await PilaModel.findOneAndUpdate({_id: pila_Id}, req.body, {new: true})
-        const trips = await TripModel.find({pila: pilaUpdated.pila})
-        console.log(trips)
-        // if(trips.ley_ag && trips.ley_fe && trips.ley_mn && trips.ley_pb && trips.ley_zn && trips.statusGeology === 'Laboratorio') {
-        if(trips.length) {
-            // updateMany trips
-            const tripToUpdate = {
-                cod_despacho: pilaUpdated.cod_despacho,
-                ley_ag: pilaUpdated.ley_ag,
-                ley_fe: pilaUpdated.ley_fe,
-                ley_mn: pilaUpdated.ley_mn,
-                ley_pb: pilaUpdated.ley_pb,
-                ley_zn: pilaUpdated.ley_zn,
-                statusGeology: 'Muestreado',
-                rango: rango(pilaUpdated.ley_ag)
-            }
-            const updatedTrips = await TripModel.updateMany({pila: pilaUpdated.pila}, {$set: tripToUpdate}, {new: true})
-            console.log(updatedTrips)
-            socket.io.emit('General', updatedTrips)
+        const isCoding = req.body.isCoding ? req.body.isCoding : false
+        const userId = req.body.userId
+        const pilaFound = await PilaModel.findOne({_id: pila_Id})
+        const samples = pilaFound.samples.length
+        const statusPila = pilaFound.statusPila
+        const isPila = pilaFound.typePila === 'Pila'
+        if(!pilaFound) {
+            return res.status(200).json({ status: false, message: 'Pila not found' })
         }
-        return res.status(200).json({ status: true, message: 'Pila updated', data: pilaUpdated })
+        
+        if ((statusPila === 'Acumulando' || statusPila === 'waitBeginAnalysis') && isPila) {
+            console.log('Pila pasa a analisis')
+            const dataToUpdate = {
+                statusPila: 'Analizando',
+                history: [...pilaFound.history, {work: 'Pila pasa a Analisis', date: new Date(), user: userId}]
+            }
+            const pilaUpdated = await PilaModel.findOneAndUpdate({_id: pila_Id}, dataToUpdate, {new: true})
+            const trips = await TripModel.find({pila: pilaUpdated.pila})
+            // UPDATE TRIPS TO Analizando
+            const tripsToUpdate = trips.map(trip => {
+                const data = {
+                    statusTrip: 'Analizando',
+                    history: [...trip.history, {work: 'Viaje pasa a Analisis', date: new Date(), user: userId}]
+                }
+                const updateTrip = TripModel.findOneAndUpdate({_id: trip._id}, data, {new: true})
+                return updateTrip
+            })
+            const updatedTrips = await Promise.all(tripsToUpdate)
+            socket.io.emit('pilas', [pilaUpdated])
+            socket.io.emit('trips', updatedTrips)
+        }
+        if (statusPila === 'Acumulando' && !isPila  && !isCoding) {
+            console.log('Giba pasa a analisis')
+            const dataToUpdate = {
+                statusPila: 'Analizando',
+                history: [...pilaFound.history, {work: 'Giba pasa a Analisis', date: new Date(), user: userId}]
+            }
+            const pilaUpdated = await PilaModel.findOneAndUpdate({_id: pila_Id}, dataToUpdate, {new: true})
+            const trips = await TripModel.find({pila: pilaUpdated.pila})
+            // UPDATE TRIPS TO Analizando
+            const tripsToUpdate = trips.map(trip => {
+                const data = {
+                    statusTrip: 'Analizando',
+                    history: [...trip.history, {work: 'Viaje pasa a Analisis', date: new Date(), user: userId}],
+                    temp: samples + 1
+                }
+                const updateTrip = TripModel.findOneAndUpdate({_id: trip._id}, data, {new: true})
+                return updateTrip
+            })
+            const updatedTrips = await Promise.all(tripsToUpdate)
+            socket.io.emit('pilas', [pilaUpdated])
+            socket.io.emit('trips', updatedTrips)
+        }
+        if (statusPila === 'Acumulando' && !isPila && isCoding) {
+            console.log('Giba obtiene codigo tableta')
+            // Create new Pila
+            const newPilaSaved = await newPila(pilaFound)
+            const trips = await TripModel.find({pila: pilaFound.pila, temp: samples})
+            const tripsToUpdate = trips.map(trip => {
+                const data = {
+                    pila: newPilaSaved.cod_tableta,
+                    cod_tableta: newPilaSaved.cod_tableta,
+                    statusTrip: 'waitBeginAnalysis',  // Puede actualizar a Analizando si el proceso es continuo
+                    history: [...trip.history, {work: 'Viaje con Cod Tableta', date: new Date(), user: userId}]
+                }
+                const updateTrip = TripModel.findOneAndUpdate({_id: trip._id}, data, {new: true})
+                return updateTrip
+            })
+            const updatedTrips = await Promise.all(tripsToUpdate)
+            const resteGibaDone = await resetGiba(pila_Id)
+            socket.io.emit('trips', updatedTrips)
+        }
+        if (statusPila === 'Analizando' && isPila) {
+            console.log('Pila pasa a waitDateAbastecimiento')
+            const dataToUpdate = req.body
+            dataToUpdate.statusPila = 'waitDateAbastecimiento'
+            dataToUpdate.history = [...pilaFound.history, {work: statusPila, date: new Date(), user: userId}]
+            const pilaUpdated = await PilaModel.findOneAndUpdate({_id: pila_Id}, dataToUpdate, {new: true})
+            const trips = await TripModel.find({pila: pilaUpdated.pila})
+            const tripsToUpdate = trips.map(trip => {
+                const data = {
+                    statusTrip: 'waitDateAbastecimiento',  // Puede actualizar a Analizando si el proceso es continuo
+                    history: [...trip.history, {work: 'Muestreado', date: new Date(), user: userId}]
+                }
+                const updateTrip = TripModel.findOneAndUpdate({_id: trip._id}, data, {new: true})
+                return updateTrip
+            })
+            const updatedTrips = await Promise.all(tripsToUpdate)
+            socket.io.emit('pilas', [pilaUpdated])
+            socket.io.emit('trips', updatedTrips)
+        }
+        if (statusPila === 'Analizando' && !isPila) {
+            console.log('Giba obtiene codigo tableta o puede acumular y analizar denuveo nueva pila encima')
+            if (samples == 0) {
+                const dataToUpdate = req.body
+                dataToUpdate.statusPila = 'Acumulando'
+                dataToUpdate.history = [...pilaFound.history, {work: statusPila, date: new Date(), user: userId}]
+                const pilaUpdated = await PilaModel.findOneAndUpdate({_id: pila_Id}, dataToUpdate, {new: true})
+                const trips = await TripModel.find({pila: pilaUpdated.pila})
+                const tripsToUpdate = trips.map(trip => {
+                    const data = {
+                        statusTrip: 'Acumulando',  // Puede actualizar a Analizando si el proceso es continuo
+                        history: [...trip.history, {work: `UPDATE muestra ${samples + 1}`, date: new Date(), user: userId}]
+                    }
+                    const updateTrip = TripModel.findOneAndUpdate({_id: trip._id}, data, {new: true})
+                    return updateTrip
+                })
+                const updatedTrips = await Promise.all(tripsToUpdate)
+                socket.io.emit('pilas', [pilaUpdated])
+                socket.io.emit('trips', updatedTrips)
+            }
+        }
+        if (statusPila === 'waitDateAbastecimiento') {
+            console.log('Pila obtiene fecha de abastecimiento')
+            const dataToUpdate = {
+                dateSupply: req.body.dateSupply,
+                statusPila: 'waitBeginDespacho',
+                history: [...pilaFound.history, {work: 'UPDATE fecha abastecimiento', date: new Date(), user: userId}]
+            }
+            const pilaUpdated = await PilaModel.findOneAndUpdate({_id: pila_Id}, dataToUpdate, {new: true})
+            const trips = await TripModel.find({pila: pilaUpdated.pila})
+            // UPDATE TRIPS TO Analizando
+            const tripsToUpdate = trips.map(trip => {
+                const data = {
+                    dateSupply: req.body.dateSupply,
+                    statusTrip: 'waitBeginDespacho',
+                    history: [...trip.history, {work: 'UPDATE fecha abastecimiento', date: new Date(), user: userId}]
+                }
+                const updateTrip = TripModel.findOneAndUpdate({_id: trip._id}, data, {new: true})
+                return updateTrip
+            })
+            const updatedTrips = await Promise.all(tripsToUpdate)
+            socket.io.emit('pilas', [pilaUpdated])
+            socket.io.emit('trips', updatedTrips)
+        }
+        if (statusPila === 'waitBeginDespacho') {
+            console.log('Pila inicia despacho')
+        }
+        if (statusPila === 'Despachando') {console.log('Pila despachando')}
+        if (statusPila === 'Finalizado') {console.log('Despachado')}
+        return res.status(200).json({ status: true, message: 'Pila updated' })
     } catch (error) {
         res.json({ message: error.message })
     }
@@ -157,7 +390,7 @@ export const getListPilas = async (req, res) => {
 
 // export const updateOrCreatePilas = async (req, res) => {
 //     try {
-//         const pilas = req.body.rumas;
+//         const pilas = rumas;
 
 //         const rumaIds = pilas.map(ruma => ruma.ruma_Id)
 //         const ton = pilas.map(ruma => ruma.ton)
