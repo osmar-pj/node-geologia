@@ -6,10 +6,15 @@ const plantaSchema = new mongoose.Schema({
     month: String,
     year: Number,
     date: Date,
-    cod_tableta: String,
+    turn: String,
     operator: String,
     tag: String,
     contract: String,
+    cod_tableta: String,
+    zone: String,
+    dominio: String,
+    veta: String,
+    tajo: String,
     ton: Number,
     tonh: Number,
     ley_ag: Number,
@@ -27,9 +32,12 @@ const plantaSchema = new mongoose.Schema({
     week: Number,
     nro_month: Number,
     // DATA DE SISTEMA GEOLOGY
-    cod_tableta: String,
     statusMina: String,  // Completo, Incompleto
-    validMina: Boolean
+    validMina: Boolean,
+    pilaId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Pila'
+    }
 },
 {
     timestamps: true,

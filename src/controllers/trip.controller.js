@@ -69,7 +69,7 @@ export const getListTripQualityControl = async (req, res) => {
             { title: 'Pila', field: 'pila', fn: '', und: '' },
             { title: 'Viajes', field: 'travels', fn: 'count', und: '' }, // contar el array para tener los viaje
             { title: 'Tajo', field: 'tajo', fn: 'arr', und: '' },
-            { title: 'Dominio', field: 'dominio', fn: '', und: '' },
+            { title: 'Dominio', field: 'dominio', fn: 'arr', und: '' },
             { title: 'Cod. Tableta', field: 'cod_tableta', fn: '', und: '' },
             { title: 'Cod. Despacho', field: 'cod_despacho', fn: '', und: '' },
             { title: 'Fecha. Abastecimiento', field: 'dateSupply', fn: '', und: '' },
@@ -83,7 +83,6 @@ export const getListTripQualityControl = async (req, res) => {
             { title: 'Ley Zn', field: 'ley_zn', fn: 'fixed', und: '' },
             // { title: 'Ton*Ley', field: 'tmh_ag', fn: 'fixed', und: '' }
         ]
-
         return res.status(200).json({status: true, data: pilas, header: header})
     } catch (error) {
         res.json({ message: error.message });
@@ -92,7 +91,7 @@ export const getListTripQualityControl = async (req, res) => {
 // GENERAL LIST ALL (falta trabajar el inifinity scroll)
 export const getListTripGeneral = async (req, res) => {
     try {
-        const trips = await TripModel.find({}).sort({createdAt: -1}).limit(30)
+        const trips = await TripModel.find({statusTrip: {$ne: 'Dividido'}}).sort({createdAt: -1}).limit(30)
         if(!trips) {
             return res.status(404).json({ message: 'Trip not found' })
         }
@@ -114,6 +113,7 @@ export const getListTripGeneral = async (req, res) => {
             { title: 'Tipo', field: 'type', fn: '', und: '' },
             { title: 'Veta', field: 'veta', fn: '', und: '' },
             { title: 'Tajo', field: 'tajo', fn: '', und: '' },
+            { title: 'Cod Despacho', field: 'cod_despacho', fn: '', und: '' },
             { title: 'Dominio', field: 'dominio', fn: 'arr', und: '' },
             { title: 'Rango', field: 'rango', fn: '', und: '' },
             { title: 'Fecha de abastecimiento', field: 'dateSupply', fn: 'date', und: '' }
@@ -160,11 +160,15 @@ export const createListTrip = async (req, res) => {
                     const giba = trip.pila
                     const tonh = trip.tonh
                     const pila = await PilaModel.findOne({pila: giba})
-                    pila.travels = [...pila.travels, tripId]
-                    pila.stock = pila.stock + tonh
-                    pila.tonh = pila.tonh + tonh
-                    pila.ton = pila.ton + tonh * 0.94
-                    const pilaUpdated = await PilaModel.findOneAndUpdate({_id: pila._id}, {stock: pila.stock, tonh: pila.tonh, ton: pila.ton, travels: pila.travels}, {new: true})
+                    const data = {
+                        stock: pila.stock + tonh,
+                        tonh: pila.tonh + tonh,
+                        ton: pila.ton + tonh * 0.94,
+                        travels: [...pila.travels, tripId],
+                        dominio: [...pila.dominio, tripSaved.dominio],
+                        history: [...pila.history, {work: 'CREATE waitBeginAnalysis', date: new Date(), user: trip.name}]
+                    }
+                    const pilaUpdated = await PilaModel.findOneAndUpdate({_id: pila._id}, data, {new: true})
                     socket.io.emit('pilas', [pilaUpdated])
                 }
             }
@@ -190,19 +194,29 @@ export const updateListTrip = async (req, res) => {
             // ACTUALIZAR TRIP CAMION
             for (let i = 0; i < data.length; i++) {
                 const tajo = await TajoModel.findOne({name: data[i].tajo})
-                data[i].statusTrip = 'waitBeginAnalysis'
-                data[i].history = [...trip.history, {work: 'waitBeginAnalysis', date: new Date(), user: data.userId}]
-                data[i].veta = tajo ? tajo.veta : "V_CACHIPAMPA"
-                data[i].level = tajo ? tajo.level : 3920
-                const tripUpdate = await TripModel.findOneAndUpdate({_id: travel_Id}, data[i], {new: true})
-                socket.io.emit('OreControl', tripUpdate)
+                const dataTripToUpdate = {
+                    statusTrip: 'waitBeginAnalysis',
+                    history: [...trip.history, {work: 'UPDATE waitBeginAnalysis', date: new Date(), user: data[i].name}],
+                    veta: tajo.veta,
+                    level: tajo.level,
+                    cod_tableta: data[i].pila,
+                    pila: data[i].pila,
+                    dominio: data[i].dominio
+                }
+                const tripUpdate = await TripModel.findOneAndUpdate({_id: travel_Id}, dataTripToUpdate, {new: true})
+                socket.io.emit('trips', [tripUpdate])
                 const pila = await PilaModel.findOne({pila: data[i].pila})
                 const tripId = tripUpdate._id
-                pila.travels = [...pila.travels, tripId]
-                pila.stock = pila.stock + trip.tonh
-                pila.tonh = pila.tonh + trip.tonh
-                pila.ton = pila.ton + trip.tonh * 0.94
-                const pilaUpdated = await PilaModel.findOneAndUpdate({_id: pila._id}, {stock: pila.stock, tonh: pila.tonh, ton: pila.ton, travels: pila.travels}, {new: true})
+                const dataToUpdate = {
+                    stock: pila.stock + trip.tonh,
+                    tonh: pila.tonh + trip.tonh,
+                    ton: pila.ton + trip.tonh * 0.94,
+                    travels: [...pila.travels, tripId],
+                    tajo: [...pila.tajo, data[i].tajo],
+                    dominio: [...pila.dominio, data[i].dominio],
+                    history: [...pila.history, {work: 'UPDATE waitBeginAnalysis', date: new Date(), user: data.name}]
+                }
+                const pilaUpdated = await PilaModel.findOneAndUpdate({_id: pila._id}, dataToUpdate, {new: true})
                 socket.io.emit('pilas', [pilaUpdated])
             }
             // console.log('UPDATED MANY', tripUpdated)
@@ -217,7 +231,7 @@ export const updateListTrip = async (req, res) => {
                 const tajo = await TajoModel.findOne({name: data[i].tajo})
                 const newTrip = await new TripModel(data[i])
                 newTrip.statusTrip = 'waitBeginAnalysis'
-                newTrip.history = [...trip.history, {work: 'waitBeginAnalysis', date: new Date(), user: data.userId}]
+                newTrip.history = [...trip.history, {work: 'UPDATE waitBeginAnalysis', date: new Date(), user: data[i].name}]
                 newTrip.splitRequired = false
                 newTrip.level = tajo ? tajo.level : null
                 newTrip.veta = tajo ? tajo.veta : null
@@ -240,20 +254,26 @@ export const updateListTrip = async (req, res) => {
                 newTrip.ton = data[i].vagones * 8 * 0.94
                 const tripSaved = await newTrip.save()
                 newTrips.push(tripSaved)
+                // OreControl es para agregar nuevos viajes
                 socket.io.emit('OreControl', tripSaved)
             }
-           
+            
             const tripUpdatedFalse = await TripModel.findOneAndUpdate({_id: travel_Id}, { splitRequired: false, statusTrip: 'Dividido', trips: newTrips.map(i => i._id) }, {new: true}) // Para que no se muestre en OreControl
-            socket.io.emit('RemoveList', tripUpdatedFalse)
+            socket.io.emit('RemoveTrip', tripUpdatedFalse)
             // UPDATE PILA
             const pilasToUpdate = await newTrips.map(async (i) => {
                 const pila = await PilaModel.findOne({pila: i.pila})
                 const tripId = i._id
-                pila.travels = [...pila.travels, tripId]
-                pila.stock = pila.stock + i.tonh
-                pila.tonh = pila.tonh + i.tonh
-                pila.ton = pila.ton + i.tonh * 0.94
-                const pilaUpdated = await PilaModel.findOneAndUpdate({_id: pila._id}, {stock: pila.stock, tonh: pila.tonh, ton: pila.ton, travels: pila.travels}, {new: true})
+                const dataToUpdate = {
+                    stock: pila.stock + i.tonh,
+                    tonh: pila.tonh + i.tonh,
+                    ton: pila.ton + i.tonh * 0.94,
+                    travels: [...pila.travels, tripId],
+                    tajo: [...pila.tajo, i.tajo],
+                    dominio: [...pila.dominio, i.dominio],
+                    history: [...pila.history, {work: 'UPDATE waitBeginAnalysis', date: new Date(), user: data.name}]
+                }
+                const pilaUpdated = await PilaModel.findOneAndUpdate({_id: pila._id}, dataToUpdate, {new: true})
                 return pilaUpdated
             })
             const pilasUpdated = await Promise.all(pilasToUpdate)
@@ -267,15 +287,18 @@ export const updateListTrip = async (req, res) => {
                 const tajo = await TajoModel.findOne({name: i.tajo})
                 const dataToUpdate = {
                     statusTrip: 'waitBeginAnalysis',
-                    history: [...trip.history, {work: 'waitBeginAnalysis', date: new Date(), user: data.userId}],
-                    level: tajo ? tajo.level : 3920,
-                    veta: tajo ? tajo.veta : "V_CACHIPAMPA",
-                    zone: tajo ? tajo.zone : "Socorro Bajo"
+                    history: [...trip.history, {work: 'UPDATE waitBeginAnalysis', date: new Date(), user: i.name}],
+                    tajo: i.tajo,
+                    type: i.type,
+                    level: tajo ? tajo.level :"NOT_NIVEL",
+                    veta: tajo ? tajo.veta : "NOT_VETA",
+                    zone: tajo ? tajo.zone : "NOT_TAJO"
                 }
                 const tripUpdated = await TripModel.findOneAndUpdate({_id: travel_Id}, dataToUpdate, {new: true})
                 return tripUpdated
             })
             const tripUpdate = await Promise.all(promiseTrips)
+            socket.io.emit('trips', tripUpdate)
             // console.log('UPDATED not MANY', tripUpdate)
             // NO SE ACTUALIZA LA PILA
             return res.status(200).json({ status: true, message: 'Trip updated', data: tripUpdate })

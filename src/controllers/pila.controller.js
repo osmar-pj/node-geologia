@@ -7,7 +7,9 @@ const socket = require('../socket.js').socket
 export const getAllPilas = async (req, res) => {
     try {
         const pilas = await PilaModel.find({}).sort({createdAt: -1})
+        const pilasToMap = pilas.filter(i => i.statusPila !== 'Finalizado')
         const pilasToOreControl = await PilaModel.find({statusPila: 'Acumulando', typePila: 'Pila'}).sort({createdAt: -1})
+        const pilasToAppTruck = pilas.filter(i => (i.statusPila === 'waitBeginDespacho' || i.statusPila === 'Despachando') && i.typePila === 'Pila')
         // console.log(pilas)
         if(!pilas) {
             return res.status(404).json({ message: 'Control calidad sin pendientes' })
@@ -19,7 +21,7 @@ export const getAllPilas = async (req, res) => {
             { title: 'Viajes', field: 'travels', fn: 'count', und: '' }, // contar el array para tener los viaje
             { title: 'Status', field: 'statusPila', fn: 'status', und: '' },
             { title: 'Tajo', field: 'tajo', fn: 'arr', und: '' },
-            { title: 'Dominio', field: 'dominio', fn: '', und: '' },
+            { title: 'Dominio', field: 'dominio', fn: 'arr', und: '' },
             { title: 'Cod. Tableta', field: 'cod_tableta', fn: '', und: '' },
             { title: 'Cod. Despacho', field: 'cod_despacho', fn: '', und: '' },
             { title: 'Fecha. Abastecimiento', field: 'dateSupply', fn: '', und: '' },
@@ -33,7 +35,7 @@ export const getAllPilas = async (req, res) => {
             { title: 'Ley Zn', field: 'ley_zn', fn: 'fixed', und: '' },
         ]
 
-        return res.status(200).json({status: true, data: pilas, header: header, pilasToOreControl: pilasToOreControl})
+        return res.status(200).json({status: true, data: pilas, header: header, pilasToOreControl: pilasToOreControl, pilasToMap: pilasToMap, pilasToAppTruck: pilasToAppTruck})
     } catch (error) {
         res.json({ message: error.message })
     }
@@ -41,10 +43,23 @@ export const getAllPilas = async (req, res) => {
 
 export const getPila = async (req, res) => {
     try {
+        const cod_tableta = req.params.cod_tableta
+        const pila = await PilaModel.findOne({cod_tableta: cod_tableta})
+        if(!pila) {
+            return res.status(200).json({ status: false, message: 'Pila not found' })
+        }
+        return res.status(200).json(pila)
+    } catch (error) {
+        res.json({ message: error.message })
+    }
+}
+
+export const getPilaByTableta = async (req, res) => {
+    try {
         const ruma_Id = req.params.ruma_Id
         const ruma = await PilaModel.findOne({ruma_Id: ruma_Id})
         if(!ruma) {
-            return res.status(200).json({ status: false, message: 'Ruma not found' })
+            return res.status(200).json({ status: false, message: 'Pila not found' })
         }
         return res.status(200).json(ruma)
     } catch (error) {
@@ -88,16 +103,13 @@ export const createPila = async (req, res) => {
             ton: 0,
             tonh: 0,
             x: 100,
-            // x: mining === 'YUMPAG' ? 120 : 100,
             y: 50,
-            // y: mining === 'YUMPAG' ? 100 : 50,
             native: 'GUNJOP',
             stock: 0
         })
         const newPilaSaved = await newPila.save()
         socket.io.emit('ControlCalidad', [newPilaSaved])
-        
-        return res.status(200).json({ status: true, message: 'Pila creada exitosamente' })
+        return res.status(200).json({ status: true, message: 'Pila creada exitosamente', pila: newPilaSaved })
     } catch (error) {
         res.json({ message: error.message })
     }
@@ -150,8 +162,9 @@ const newPila = async (pila) => {
                 ubication: 'Cancha 2',
                 statusBelong: 'No Belong',
                 typePila: 'Pila',
+                dominio: pila.dominio,
                 statusPila: 'Analizando',
-                history: [...pila.history, {work: 'Giba cambia a Pila y analiza', date: new Date(), user: 'System'}],
+                history: [...pila.history, {work: 'UPDATE giba cambia a Pila y se analiza', date: new Date(), user: 'System'}],
                 ton: pila.ton,
                 tonh: pila.tonh,
                 x: 100,
@@ -180,7 +193,7 @@ const resetGiba = async (pilaId) => {
     try {
         const pilaToUpdate = {
             statusTrip: 'Acumulando',
-            history: [{work: 'Limpiado', date: new Date(), user: 'System'}],
+            history: [{work: 'DELETE CREATE giba reinicia status', date: new Date(), user: 'System'}],
             ton: 0,
             tonh: 0,
             stock: 0,
@@ -191,13 +204,15 @@ const resetGiba = async (pilaId) => {
             ley_zn: 0,
             rango: '',
             dominio: '',
+            cod_despacho: '',
             level: 0,
             type: '',
             veta: '',
             tajo: [],
             zone: '',
             travels: [],
-            samples: []
+            samples: [],
+            dominio: []
         }
         const updatePila = await PilaModel.findOneAndUpdate({_id: pilaId}, pilaToUpdate, {new: true})
         socket.io.emit('pilas', [updatePila])
@@ -211,7 +226,7 @@ export const updatePila = async (req, res) => {
     try {
         const pila_Id = req.params.pila_Id
         const isCoding = req.body.isCoding ? req.body.isCoding : false
-        const userId = req.body.userId
+        const name = req.body.name
         const pilaFound = await PilaModel.findOne({_id: pila_Id})
         const samples = pilaFound.samples.length
         const statusPila = pilaFound.statusPila
@@ -223,16 +238,18 @@ export const updatePila = async (req, res) => {
         if ((statusPila === 'Acumulando' || statusPila === 'waitBeginAnalysis') && isPila) {
             console.log('Pila pasa a analisis')
             const dataToUpdate = {
+                cod_despacho: req.body.cod_despacho,
                 statusPila: 'Analizando',
-                history: [...pilaFound.history, {work: 'Pila pasa a Analisis', date: new Date(), user: userId}]
+                history: [...pilaFound.history, {work: 'UPDATE pila pasa a Analisis', date: new Date(), user: name}]
             }
             const pilaUpdated = await PilaModel.findOneAndUpdate({_id: pila_Id}, dataToUpdate, {new: true})
             const trips = await TripModel.find({pila: pilaUpdated.pila})
             // UPDATE TRIPS TO Analizando
             const tripsToUpdate = trips.map(trip => {
                 const data = {
+                    cod_despacho: pilaUpdated.cod_despacho,
                     statusTrip: 'Analizando',
-                    history: [...trip.history, {work: 'Viaje pasa a Analisis', date: new Date(), user: userId}]
+                    history: [...trip.history, {work: 'UPDATE viaje pasa a Analisis', date: new Date(), user: name}]
                 }
                 const updateTrip = TripModel.findOneAndUpdate({_id: trip._id}, data, {new: true})
                 return updateTrip
@@ -244,16 +261,18 @@ export const updatePila = async (req, res) => {
         if (statusPila === 'Acumulando' && !isPila  && !isCoding) {
             console.log('Giba pasa a analisis')
             const dataToUpdate = {
+                cod_despacho: req.body.cod_despacho,
                 statusPila: 'Analizando',
-                history: [...pilaFound.history, {work: 'Giba pasa a Analisis', date: new Date(), user: userId}]
+                history: [...pilaFound.history, {work: 'UPDATE giba pasa a Analisis', date: new Date(), user: name}]
             }
             const pilaUpdated = await PilaModel.findOneAndUpdate({_id: pila_Id}, dataToUpdate, {new: true})
             const trips = await TripModel.find({pila: pilaUpdated.pila})
             // UPDATE TRIPS TO Analizando
             const tripsToUpdate = trips.map(trip => {
                 const data = {
+                    cod_despacho: pilaUpdated.cod_despacho,
                     statusTrip: 'Analizando',
-                    history: [...trip.history, {work: 'Viaje pasa a Analisis', date: new Date(), user: userId}],
+                    history: [...trip.history, {work: 'UPDATE viaje pasa a Analisis', date: new Date(), user: name}],
                     temp: samples + 1
                 }
                 const updateTrip = TripModel.findOneAndUpdate({_id: trip._id}, data, {new: true})
@@ -273,7 +292,7 @@ export const updatePila = async (req, res) => {
                     pila: newPilaSaved.cod_tableta,
                     cod_tableta: newPilaSaved.cod_tableta,
                     statusTrip: 'waitBeginAnalysis',  // Puede actualizar a Analizando si el proceso es continuo
-                    history: [...trip.history, {work: 'Viaje con Cod Tableta', date: new Date(), user: userId}]
+                    history: [...trip.history, {work: 'UPDATE viaje con Cod Tableta', date: new Date(), user: name}]
                 }
                 const updateTrip = TripModel.findOneAndUpdate({_id: trip._id}, data, {new: true})
                 return updateTrip
@@ -286,13 +305,13 @@ export const updatePila = async (req, res) => {
             console.log('Pila pasa a waitDateAbastecimiento')
             const dataToUpdate = req.body
             dataToUpdate.statusPila = 'waitDateAbastecimiento'
-            dataToUpdate.history = [...pilaFound.history, {work: statusPila, date: new Date(), user: userId}]
+            dataToUpdate.history = [...pilaFound.history, {work: 'UPDATE se sube el archivo de muestras a la pila', date: new Date(), user: name}]
             const pilaUpdated = await PilaModel.findOneAndUpdate({_id: pila_Id}, dataToUpdate, {new: true})
             const trips = await TripModel.find({pila: pilaUpdated.pila})
             const tripsToUpdate = trips.map(trip => {
                 const data = {
                     statusTrip: 'waitDateAbastecimiento',  // Puede actualizar a Analizando si el proceso es continuo
-                    history: [...trip.history, {work: 'Muestreado', date: new Date(), user: userId}]
+                    history: [...trip.history, {work: 'UPDATE Muestreado', date: new Date(), user: name}]
                 }
                 const updateTrip = TripModel.findOneAndUpdate({_id: trip._id}, data, {new: true})
                 return updateTrip
@@ -306,13 +325,13 @@ export const updatePila = async (req, res) => {
             if (samples == 0) {
                 const dataToUpdate = req.body
                 dataToUpdate.statusPila = 'Acumulando'
-                dataToUpdate.history = [...pilaFound.history, {work: statusPila, date: new Date(), user: userId}]
+                dataToUpdate.history = [...pilaFound.history, {work: 'UPDATE se sube el archivo de muestras a la giba', date: new Date(), user: name}]
                 const pilaUpdated = await PilaModel.findOneAndUpdate({_id: pila_Id}, dataToUpdate, {new: true})
                 const trips = await TripModel.find({pila: pilaUpdated.pila})
                 const tripsToUpdate = trips.map(trip => {
                     const data = {
                         statusTrip: 'Acumulando',  // Puede actualizar a Analizando si el proceso es continuo
-                        history: [...trip.history, {work: `UPDATE muestra ${samples + 1}`, date: new Date(), user: userId}]
+                        history: [...trip.history, {work: `UPDATE se sube las muestras ${samples + 1}`, date: new Date(), user: name}]
                     }
                     const updateTrip = TripModel.findOneAndUpdate({_id: trip._id}, data, {new: true})
                     return updateTrip
@@ -327,7 +346,7 @@ export const updatePila = async (req, res) => {
             const dataToUpdate = {
                 dateSupply: req.body.dateSupply,
                 statusPila: 'waitBeginDespacho',
-                history: [...pilaFound.history, {work: 'UPDATE fecha abastecimiento', date: new Date(), user: userId}]
+                history: [...pilaFound.history, {work: 'UPDATE fecha abastecimiento', date: new Date(), user: name}]
             }
             const pilaUpdated = await PilaModel.findOneAndUpdate({_id: pila_Id}, dataToUpdate, {new: true})
             const trips = await TripModel.find({pila: pilaUpdated.pila})
@@ -336,7 +355,7 @@ export const updatePila = async (req, res) => {
                 const data = {
                     dateSupply: req.body.dateSupply,
                     statusTrip: 'waitBeginDespacho',
-                    history: [...trip.history, {work: 'UPDATE fecha abastecimiento', date: new Date(), user: userId}]
+                    history: [...trip.history, {work: 'UPDATE fecha abastecimiento', date: new Date(), user: name}]
                 }
                 const updateTrip = TripModel.findOneAndUpdate({_id: trip._id}, data, {new: true})
                 return updateTrip
@@ -356,19 +375,28 @@ export const updatePila = async (req, res) => {
     }
 }
 
+export const updatePilaOfMap = async (req, res) => {
+    try {
+        const pila_Id = req.params.pila_Id
+        const dataToUpdate = req.body
+        const pilaUpdated = await PilaModel.findOneAndUpdate
+        ({_id: pila_Id}, dataToUpdate, {new: true})
+        socket.io.emit('pilas', [pilaUpdated])
+        return res.status(200).json({ status: true, message: 'Pila updated' })
+    } catch (error) {
+        res.json({ message: error.message })
+    }
+}
+
 export const deletePila = async (req, res) => {
     try {
 
         const pila_Id = req.params.pila_Id
-
         const pilaDeleted = await PilaModel.findOne({pila_Id: pila_Id})
-
         if(!pilaDeleted) {
             return res.status(200).json({ status: false, message: 'No existe la pila' })
         }
-
         await PilaModel.deleteOne({pila_Id: pila_Id})
-
         return res.status(200).json({ status: true, message: 'pila deleted' })
     } catch (error) {
         res.json({ message: error.message })
@@ -378,66 +406,9 @@ export const deletePila = async (req, res) => {
 export const getListPilas = async (req, res) => {
     try {
         const pilas = await PilaModel.find({statusTransition: {$ne: 'Planta'}, statusBelong: 'No Belong'}, { data: 0 })
-        const staticRUmas = pilas.filter(i => i.statusCumm === true)
-        const dynamicRumas = pilas.filter(i => i.statusCumm === false)
-        // 
         return res.status(200).json({pilas})
 
     } catch (error) {
         res.json({ message: error.message })
     }
 }
-
-// export const updateOrCreatePilas = async (req, res) => {
-//     try {
-//         const pilas = rumas;
-
-//         const rumaIds = pilas.map(ruma => ruma.ruma_Id)
-//         const ton = pilas.map(ruma => ruma.ton)
-//         const tonh = rumas.map(ruma => ruma.tonh)
-//         const n_travels = rumas.map(ruma => ruma.n_travels)
-
-//         const updateRumas = await Promise.all(rumas.map(async ruma => {
-//             const updateRuma = await PilaModel.updateOne({ ruma_Id: ruma.ruma_Id }, { $set: { valid: 0, statusBelong: 'Belong' } });
-//             return updateRuma;
-//         }));
-
-//         const lastRuma = await PilaModel.findOne().sort({ _id: -1 }).limit(1);
-//         let newRumaId;
-
-//         if (lastRuma) {
-//             const currentYear = new Date().getFullYear();
-//             const lastRumaYear = parseInt(lastRuma.ruma_Id.split('-')[1], 10);
-//             let newRumaNumber;
-
-//             if (currentYear === lastRumaYear) {
-//                 const lastRumaNumber = parseInt(lastRuma.ruma_Id.split('-')[2], 10);
-//                 newRumaNumber = lastRumaNumber + 1;
-//             } else {
-//                 newRumaNumber = 1;
-//             }
-
-//             newRumaId = `CA-${currentYear}-${('000' + newRumaNumber).slice(-3)}`;
-//         } else {
-//             newRumaId = 'R24-0001';
-//         }
-
-//         const newRuma = new PilaModel({
-//             ruma_Id: newRumaId,
-//             valid: 1,
-//             statusBelong: 'Belong',
-//             statusTransition: 'Planta',
-//             rumas_united: rumaIds,
-//             ton: ton.reduce((acc, cur) => acc + cur, 0),
-//             tonh: tonh.reduce((acc, cur) => acc + cur, 0),
-//             n_travels: n_travels.reduce((acc, cur) => acc + cur, 0)
-//         });
-
-//         await newRuma.save();
-
-//         return res.status(200).json({ status: true, message: 'Las rumas antiguas se han unido y se ha creado una nueva ruma' });
-
-//     } catch (error) {
-//         res.json({ message: error.message });
-//     }
-// };

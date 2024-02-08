@@ -15,7 +15,7 @@ const pilaSchema = new mongoose.Schema({
         default: [],
         type: Array
     },
-    dominio: String,
+    dominio: [],
     ton: {
         default: 0,
         type: Number
@@ -29,6 +29,11 @@ const pilaSchema = new mongoose.Schema({
     ley_mn: Number,
     ley_pb: Number,
     ley_zn: Number,
+    tmh_ag: Number,
+    tmh_fe: Number,
+    tmh_mn: Number,
+    tmh_pb: Number,
+    tmh_zn: Number,
     typePila: String, // Pila / Giba
     statusPila: String, // Creado / Laboratorio / Muestreado / Mezclado / Trasladado / Fecha Abastecimiento / Despachado
     actionPila: String, // Acumulando / Analizando / Muestreando / Mezclando* / Trasladando* / Falta Fecha Abastecimiento / Listo para despachar  / Despachando / Finalizado

@@ -40,9 +40,9 @@ const tripSchema = new mongoose.Schema({
     week: Number,
     nro_month: Number,
     cod_despacho: String,
+    cod_tableta: String,
     pila: String,
     // DATA DE SISTEMA GEOLOGY
-    cod_tableta: String,
     statusMina: String,  // Completo, Incompleto
     statusTrip: String, // Creado (APP truck, wagon) / Falta dividir (APP wagon) / Actualizado (QC) / Laboratorio (QC) / Muestreado (QC) / Despachando (QC) / Finalizado (AUTO)
     history: [], // {work: statusTrip, date: Date, user: String}

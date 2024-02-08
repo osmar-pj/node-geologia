@@ -9,17 +9,18 @@ import cors from 'cors'
 import { config } from 'dotenv'
 config()
 
-import { generateTajo, generateTrip, generateRumas } from './libs/generateDates.js'
+import { generateTajo, generateTrip, generateRumas, generateTripsPlanta } from './libs/generateDates.js'
 generateTajo()
 generateTrip()
 generateRumas()
+generateTripsPlanta()
 
 import tripRoutes from './routes/trip.routes.js'
 import pilaRoutes from './routes/pila.routes.js'
 import tajoRoutes from './routes/tajo.routes.js'
 import authRoutes from './routes/auth.routes.js'
-
 import dataRoutes from './routes/data.routes.js'
+import plantaRoutes from './routes/planta.routes.js'
 
 const app = express()
 
@@ -38,7 +39,8 @@ const routes = [
     pilaRoutes,
     tajoRoutes,
     authRoutes,
-    dataRoutes
+    dataRoutes,
+    plantaRoutes
 ]
 
 app.use('/', routes)

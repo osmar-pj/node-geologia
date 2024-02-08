@@ -2,6 +2,7 @@ import { readFileSync } from 'fs'
 import PilaModel from '../models/PilaModel.js'
 import TripModel from '../models/TripModel.js'
 import TajoModel from '../models/TajoModel.js'
+import PlantaModel from '../models/PlantaModel.js'
 
 export const generateTajo = async (req, res) => {
     try {
@@ -64,7 +65,7 @@ export const generateRumas = async (req, res) => {
                 newPila.samples = [{Muestra: ''}]
                 newPila.typePila = 'Pila'
                 newPila.statusPila = newPila.status == 'Cancha' ? 'waitBeginDespacho' : 'Finalizado'
-                newPila.history = [{work: 'Creado', date: new Date(), user: 'System'}]
+                newPila.history = [{work: 'CREATE from client', date: new Date(), user: 'System'}]
                 newPila.statusBelong = 'No Belong'
                 newPila.x = 100
                 newPila.y = 50
@@ -88,7 +89,7 @@ export const generateRumas = async (req, res) => {
                 newPila.samples = []
                 newPila.typePila = 'Giba'
                 newPila.statusPila = 'Acumulando'
-                newPila.history = [{work: 'Creado', date: new Date(), user: 'System'}]
+                newPila.history = [{work: 'CREATE gibas en cero', date: new Date(), user: 'System'}]
                 newPila.statusBelong = 'No Belong'
                 newPila.x = 120
                 newPila.y = 60
@@ -104,5 +105,30 @@ export const generateRumas = async (req, res) => {
     }
     catch (error) {
         res.json({ message: error.message })
+    }
+}
+
+export const generateTripsPlanta = async (req, res) => {
+    try {
+        const count = await PlantaModel.estimatedDocumentCount()
+
+        if (count == 0) {
+            const data = await readFileSync('src/libs/planta.json', 'utf-8')
+            const trips = JSON.parse(data)
+            const tripPromises = trips.map(async trip => {
+                const newTrip = await new PlantaModel(trip)
+                newTrip.zone = trip.zona
+                newTrip.timestamp = trip.date/1000
+                newTrip.dateCreatedAt = trip.date
+                newTrip.nro_month = new Date(trip.date).getMonth() + 1
+                newTrip.statusMina = 'Completo'
+                newTrip.validMina = true
+                return newTrip.save()
+            })
+            const result = await Promise.all(tripPromises)
+            console.log('TRIPS PLANTA SAVED')
+        }
+    } catch (error) {
+        
     }
 }

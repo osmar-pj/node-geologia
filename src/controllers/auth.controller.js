@@ -2,13 +2,16 @@ import axios from 'axios'
 
 export const signin = async (req, res) => {
     try {
-        console.log('SIGNIN', req.body)
         const {data} = await axios.post(`${process.env.NODE_WAPSI_URL}/auth/${process.env.API_VERSION}/signin`, req.body)
-        console.log(data)
-        // save in req
-        // req.user = data.user
-        // console.log('LOGIN', req.user)
-        return res.status(200).json(data)
+        const user = {
+            userId: data.userId,
+            name: data.user,
+            token: data.token,
+            empresa: data.empresa,
+            roles: data.roles.map(role => role.name),
+            status: data.status
+        }
+        return res.status(200).json(user)
         
     } catch (error) {
         res.json({ message: error.message });
