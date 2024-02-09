@@ -10,7 +10,7 @@ const pilaSchema = new mongoose.Schema({
     status: String, // Cancha / Planta
     mining: String,
     cod_tableta: String,
-    cod_despacho: String,
+    cod_despacho: [],
     tajo: {
         default: [],
         type: Array
@@ -61,10 +61,7 @@ const pilaSchema = new mongoose.Schema({
         type: Number
     },
     native: String,
-    stock: {
-        default: 0,
-        type: Number
-    },
+    stock: Number,
     dateSupply: Date
 },
 {

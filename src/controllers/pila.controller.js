@@ -100,36 +100,19 @@ export const createPila = async (req, res) => {
             typePila: 'Pila',
             statusPila: 'Acumulando',
             history: [{work: 'Creado', date: new Date(), user: 'System'}],
-            ton: 0,
+            stock: 0,
             tonh: 0,
+            ton: 0,
             x: 100,
             y: 50,
-            native: 'GUNJOP',
-            stock: 0
+            native: 'GUNJOP'
         })
         const newPilaSaved = await newPila.save()
-        socket.io.emit('ControlCalidad', [newPilaSaved])
+        console.log(newPilaSaved)
+        socket.io.emit('pilas', [newPilaSaved])
         return res.status(200).json({ status: true, message: 'Pila creada exitosamente', pila: newPilaSaved })
     } catch (error) {
         res.json({ message: error.message })
-    }
-}
-
-const rango = (ley) => {
-    // switch case
-    switch (true) {
-        case ley >= 0 && ley <= 3:
-            return '0-3'
-        case ley > 3 && ley <= 4:
-            return '3-4'
-        case ley > 4 && ley <= 4.5:
-            return '4-4.5'
-        case ley > 4.5 && ley <= 5:
-            return '4.5-5'
-        case ley > 5 && ley <= 10:
-            return '5-10'
-        default:
-            return '10'
     }
 }
 
@@ -163,7 +146,7 @@ const newPila = async (pila) => {
                 statusBelong: 'No Belong',
                 typePila: 'Pila',
                 dominio: pila.dominio,
-                statusPila: 'Analizando',
+                statusPila: 'waitBeginAnalysis',
                 history: [...pila.history, {work: 'UPDATE giba cambia a Pila y se analiza', date: new Date(), user: 'System'}],
                 ton: pila.ton,
                 tonh: pila.tonh,
@@ -182,7 +165,7 @@ const newPila = async (pila) => {
                 ley_zn: pila.ley_zn
             })
             const newPilaSaved = await newPila.save()
-            socket.io.emit('ControlCalidad', [newPilaSaved])
+            socket.io.emit('pilas', [newPilaSaved])
             return newPilaSaved
     } catch (error) {
         console.error(error)
@@ -204,7 +187,7 @@ const resetGiba = async (pilaId) => {
             ley_zn: 0,
             rango: '',
             dominio: '',
-            cod_despacho: '',
+            cod_despacho: [],
             level: 0,
             type: '',
             veta: '',
@@ -228,7 +211,7 @@ export const updatePila = async (req, res) => {
         const isCoding = req.body.isCoding ? req.body.isCoding : false
         const name = req.body.name
         const pilaFound = await PilaModel.findOne({_id: pila_Id})
-        const samples = pilaFound.samples.length
+        const samples = pilaFound.cod_despacho.length
         const statusPila = pilaFound.statusPila
         const isPila = pilaFound.typePila === 'Pila'
         if(!pilaFound) {
@@ -238,7 +221,7 @@ export const updatePila = async (req, res) => {
         if ((statusPila === 'Acumulando' || statusPila === 'waitBeginAnalysis') && isPila) {
             console.log('Pila pasa a analisis')
             const dataToUpdate = {
-                cod_despacho: req.body.cod_despacho,
+                cod_despacho: [req.body.cod_despacho],
                 statusPila: 'Analizando',
                 history: [...pilaFound.history, {work: 'UPDATE pila pasa a Analisis', date: new Date(), user: name}]
             }
@@ -247,7 +230,7 @@ export const updatePila = async (req, res) => {
             // UPDATE TRIPS TO Analizando
             const tripsToUpdate = trips.map(trip => {
                 const data = {
-                    cod_despacho: pilaUpdated.cod_despacho,
+                    cod_despacho: req.body.cod_despacho,
                     statusTrip: 'Analizando',
                     history: [...trip.history, {work: 'UPDATE viaje pasa a Analisis', date: new Date(), user: name}]
                 }
@@ -261,19 +244,18 @@ export const updatePila = async (req, res) => {
         if (statusPila === 'Acumulando' && !isPila  && !isCoding) {
             console.log('Giba pasa a analisis')
             const dataToUpdate = {
-                cod_despacho: req.body.cod_despacho,
+                cod_despacho: [...pilaFound.cod_despacho, req.body.cod_despacho],
                 statusPila: 'Analizando',
                 history: [...pilaFound.history, {work: 'UPDATE giba pasa a Analisis', date: new Date(), user: name}]
             }
             const pilaUpdated = await PilaModel.findOneAndUpdate({_id: pila_Id}, dataToUpdate, {new: true})
-            const trips = await TripModel.find({pila: pilaUpdated.pila})
+            const trips = await TripModel.find({pila: pilaUpdated.pila},{temp: samples})
             // UPDATE TRIPS TO Analizando
             const tripsToUpdate = trips.map(trip => {
                 const data = {
                     cod_despacho: pilaUpdated.cod_despacho,
                     statusTrip: 'Analizando',
                     history: [...trip.history, {work: 'UPDATE viaje pasa a Analisis', date: new Date(), user: name}],
-                    temp: samples + 1
                 }
                 const updateTrip = TripModel.findOneAndUpdate({_id: trip._id}, data, {new: true})
                 return updateTrip
@@ -291,7 +273,7 @@ export const updatePila = async (req, res) => {
                 const data = {
                     pila: newPilaSaved.cod_tableta,
                     cod_tableta: newPilaSaved.cod_tableta,
-                    statusTrip: 'waitBeginAnalysis',  // Puede actualizar a Analizando si el proceso es continuo
+                    statusTrip: 'Acumulando',  // Puede actualizar a Analizando si el proceso es continuo
                     history: [...trip.history, {work: 'UPDATE viaje con Cod Tableta', date: new Date(), user: name}]
                 }
                 const updateTrip = TripModel.findOneAndUpdate({_id: trip._id}, data, {new: true})

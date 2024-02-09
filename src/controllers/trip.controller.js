@@ -71,7 +71,7 @@ export const getListTripQualityControl = async (req, res) => {
             { title: 'Tajo', field: 'tajo', fn: 'arr', und: '' },
             { title: 'Dominio', field: 'dominio', fn: 'arr', und: '' },
             { title: 'Cod. Tableta', field: 'cod_tableta', fn: '', und: '' },
-            { title: 'Cod. Despacho', field: 'cod_despacho', fn: '', und: '' },
+            { title: 'Cod. Despacho', field: 'cod_despacho', fn: 'arr', und: '' },
             { title: 'Fecha. Abastecimiento', field: 'dateSupply', fn: '', und: '' },
 
             { title: 'Stock mineral', field: 'stock', fn: 'fixed', und: 'TMH' },
@@ -170,6 +170,8 @@ export const createListTrip = async (req, res) => {
                     }
                     const pilaUpdated = await PilaModel.findOneAndUpdate({_id: pila._id}, data, {new: true})
                     socket.io.emit('pilas', [pilaUpdated])
+                    const tripUpdated = await TripModel.findOneAndUpdate({_id: tripId}, {temp: pilaUpdated.cod_despacho.length}, {new: true})
+                    socket.io.emit('OreControl', tripUpdated)
                 }
             }
         }

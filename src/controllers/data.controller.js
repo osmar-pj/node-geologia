@@ -117,8 +117,8 @@ export const getGroup = async (req, res) => {
 export const getDataAnalysis = async (req, res) => {
     try {
         const ts = Math.round(req.query.ts / 1000)
-        // const mining = req.query.mining
-        const response = await axios.get(`${process.env.FLASK_URL}/analysis2?ts=${ts}`);
+        const mining = req.query.mining
+        const response = await axios.get(`${process.env.FLASK_URL}/analysis2?ts=${ts}&mining=${mining}`);
         const data = response.data.result;
         const meta = response.data.meta;
         console.log(data, meta)
