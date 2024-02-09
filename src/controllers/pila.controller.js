@@ -108,7 +108,7 @@ export const createPila = async (req, res) => {
             native: 'GUNJOP'
         })
         const newPilaSaved = await newPila.save()
-        console.log(newPilaSaved)
+        socket.io.emit('newPila', newPilaSaved)
         socket.io.emit('pilas', [newPilaSaved])
         return res.status(200).json({ status: true, message: 'Pila creada exitosamente', pila: newPilaSaved })
     } catch (error) {
@@ -146,7 +146,7 @@ const newPila = async (pila) => {
                 statusBelong: 'No Belong',
                 typePila: 'Pila',
                 dominio: pila.dominio,
-                statusPila: 'waitBeginAnalysis',
+                statusPila: 'Acumulando',
                 history: [...pila.history, {work: 'UPDATE giba cambia a Pila y se analiza', date: new Date(), user: 'System'}],
                 ton: pila.ton,
                 tonh: pila.tonh,
@@ -165,6 +165,7 @@ const newPila = async (pila) => {
                 ley_zn: pila.ley_zn
             })
             const newPilaSaved = await newPila.save()
+            socket.io.emit('newPila', newPilaSaved)
             socket.io.emit('pilas', [newPilaSaved])
             return newPilaSaved
     } catch (error) {

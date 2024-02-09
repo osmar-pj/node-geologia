@@ -9,6 +9,7 @@ router.get('/trip/:travel_Id', tripCtrl.getListTrip)
 
 router.get('/qualitycontrol', tripCtrl.getListTripQualityControl)  // Calidad
 router.post('/listGeneral', tripCtrl.getListTripGeneral) // Lista general
+router.post('/trips', tripCtrl.getTrips) // Lista general
 
 router.post('/trip', tripCtrl.createListTrip)
 

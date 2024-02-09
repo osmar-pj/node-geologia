@@ -25,8 +25,8 @@ export const getListGeology = async (req, res) => {
         const mining = req.query.mining;
         const month = req.query.month;
         const array = req.query.array;
-        const response = await axios.get(`${process.env.FLASK_URL}/datageology`);
-        const data = response.data;
+        const response = await axios.get(`${process.env.FLASK_URL}/datageology`)
+        const data = response.data
         return res.status(200).json(data);
     } catch (error) {
         res.json({ message: error.message });
@@ -65,48 +65,48 @@ export const createListTrips = async (req, res) => {
 
 export const getGroup = async (req, res) => {
     try {
-        const response = await axios.post(`${process.env.FLASK_URL}/analysis`, req.body);
+        // const response = await axios.post(`${process.env.FLASK_URL}/analysis`, req.body);
 
-        const data = response.data;
-        const filtered = req.body.arr
-        const columns = [
-            { title: 'Año', field: 'year', fn: '', und: '' },
-            { title: 'Mes', field: 'month', fn: '', und: '' },
-            { title: 'Fecha', field: 'date', fn: 'date', und: '' },
-            { title: 'Estado', field: 'status', fn: '', und: '' },
-            { title: 'Ubicación', field: 'ubication', fn: '', und: '' },
-            { title: 'Turno', field: 'turn', fn: '', und: '' },
-            { title: 'Mina', field: 'mining', fn: '', und: '' },
-            { title: 'Nivel', field: 'level', fn: '', und: '' },
-            { title: 'Tipo', field: 'type', fn: '', und: '' },
-            { title: 'Veta', field: 'veta', fn: '', und: '' },
-            { title: 'Tajo', field: 'tajo', fn: '', und: '' },
-            { title: 'Dominio', field: 'dominio', fn: '', und: '' },
-            { title: 'Rango', field: 'rango', fn: '', und: '' },
-            { title: 'Fecha de abastecimiento', field: 'date_abas', fn: 'date', und: '' }
-        ]
+        // const data = response.data;
+        // const filtered = req.body.arr
+        // const columns = [
+        //     { title: 'Año', field: 'year', fn: '', und: '' },
+        //     { title: 'Mes', field: 'month', fn: '', und: '' },
+        //     { title: 'Fecha', field: 'date', fn: 'date', und: '' },
+        //     { title: 'Estado', field: 'status', fn: '', und: '' },
+        //     { title: 'Ubicación', field: 'ubication', fn: '', und: '' },
+        //     { title: 'Turno', field: 'turn', fn: '', und: '' },
+        //     { title: 'Mina', field: 'mining', fn: '', und: '' },
+        //     { title: 'Nivel', field: 'level', fn: '', und: '' },
+        //     { title: 'Tipo', field: 'type', fn: '', und: '' },
+        //     { title: 'Veta', field: 'veta', fn: '', und: '' },
+        //     { title: 'Tajo', field: 'tajo', fn: '', und: '' },
+        //     { title: 'Dominio', field: 'dominio', fn: '', und: '' },
+        //     { title: 'Rango', field: 'rango', fn: '', und: '' },
+        //     { title: 'Fecha de abastecimiento', field: 'date_abas', fn: 'date', und: '' }
+        // ]
         
-        const staticColumns = [
-            { title: 'Ton', field: 'ton', fn: 'fixed', und: 'TM' },
-            { title: 'Tonh', field: 'tonh', fn: 'fixed', und: 'TMH' },
-            { title: 'Ley Ag', field: 'ley_ag', fn: 'fixed', und: '' },
-            { title: 'Ley Fe', field: 'ley_fe', fn: 'fixed', und: '' },
-            { title: 'Ley Mn', field: 'ley_mn', fn: 'fixed', und: '' },
-            { title: 'Ley Pb', field: 'ley_pb', fn: 'fixed', und: '' },
-            { title: 'Ley Zn', field: 'ley_zn', fn: 'fixed', und: '' }
-        ];
+        // const staticColumns = [
+        //     { title: 'Ton', field: 'ton', fn: 'fixed', und: 'TM' },
+        //     { title: 'Tonh', field: 'tonh', fn: 'fixed', und: 'TMH' },
+        //     { title: 'Ley Ag', field: 'ley_ag', fn: 'fixed', und: '' },
+        //     { title: 'Ley Fe', field: 'ley_fe', fn: 'fixed', und: '' },
+        //     { title: 'Ley Mn', field: 'ley_mn', fn: 'fixed', und: '' },
+        //     { title: 'Ley Pb', field: 'ley_pb', fn: 'fixed', und: '' },
+        //     { title: 'Ley Zn', field: 'ley_zn', fn: 'fixed', und: '' }
+        // ];
 
-        const filterColumns = columns.filter((col) => filtered.includes(col.field));
-        const orderColumns = filtered.map((item) => filterColumns.find((col) => col.field === item));
+        // const filterColumns = columns.filter((col) => filtered.includes(col.field));
+        // const orderColumns = filtered.map((item) => filterColumns.find((col) => col.field === item));
         
-        if (filtered.length === 0) {
-            const header = [...columns, ...staticColumns]
-            return res.status(200).json({status: true, data: data, header: header});
-        } else {
+        // if (filtered.length === 0) {
+        //     const header = [...columns, ...staticColumns]
+        //     return res.status(200).json({status: true, data: data, header: header});
+        // } else {
 
-            const header = [...orderColumns, ...staticColumns];
-            return res.status(200).json({status: true, data: data, header: header});
-        }
+        //     const header = [...orderColumns, ...staticColumns];
+        //     return res.status(200).json({status: true, data: data, header: header});
+        // }
 
 
     } catch (error) {

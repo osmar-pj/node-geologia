@@ -1,6 +1,7 @@
 import TripModel from '../models/TripModel.js'
 import PilaModel from '../models/PilaModel.js'
 import TajoModel from '../models/TajoModel.js'
+import axios from 'axios'
 
 const socket = require('../socket.js').socket
 
@@ -29,13 +30,14 @@ export const getOreControlList = async (req, res) => {
         
         const header = [
             // { title: 'Id', field: '_id', fn: '', und: '' },
-            { title: 'Año', field: 'year', fn: '', und: '' },
-            { title: 'Mes', field: 'month', fn: '', und: '' },
+            // { title: 'Año', field: 'year', fn: '', und: '' },
+            // { title: 'Mes', field: 'month', fn: '', und: '' },
             { title: 'Fecha', field: 'date', fn: 'date', und: '' },
             { title: 'Estado', field: 'status', fn: '', und: '' },
             { title: 'Ubicación', field: 'ubication', fn: '', und: '' },
             { title: 'Pila', field: 'destiny', fn: 'arr', und: '' },
             { title: 'Turno', field: 'turn', fn: '', und: '' },
+            { title: 'Placa', field: 'tag', fn: '', und: '' },
             { title: 'Vagones', field: 'vagones', fn: '', und: '' },
             { title: 'Mina', field: 'mining', fn: '', und: '' },
             { title: 'Nivel', field: 'level', fn: '', und: '' },
@@ -43,6 +45,7 @@ export const getOreControlList = async (req, res) => {
             { title: 'Tipo', field: 'type', fn: '', und: '' },
             { title: 'Tajo', field: 'tajo', fn: '', und: '' },
             { title: 'Dominio', field: 'dominio', fn: 'arr', und: '' },
+            { title: 'Tonelaje', field: 'tonh', fn: '', und: '' },
             { title: 'Transition', field: 'statusPila', fn: '', und: '' }
         ]
         return res.status(200).json({status: true, data: trips, header: header});
@@ -91,12 +94,13 @@ export const getListTripQualityControl = async (req, res) => {
 // GENERAL LIST ALL (falta trabajar el inifinity scroll)
 export const getListTripGeneral = async (req, res) => {
     try {
-        const trips = await TripModel.find({statusTrip: {$ne: 'Dividido'}}).sort({createdAt: -1}).limit(30)
+        const filtered = req.body.arr
+        const limit = filtered.length === 0 ? 30 : 100
+        const trips = await TripModel.find({statusTrip: {$ne: 'Dividido'}}).sort({createdAt: -1}).limit(limit)
         if(!trips) {
             return res.status(404).json({ message: 'Trip not found' })
         }
         const data = trips
-        const filtered = req.body.arr
         const columns = [
             // { title: 'Id', field: '_id', fn: '', und: '' },
             { title: 'Año', field: 'year', fn: '', und: '' },
@@ -131,14 +135,26 @@ export const getListTripGeneral = async (req, res) => {
 
         const filterColumns = columns.filter((col) => filtered.includes(col.field));
         const orderColumns = filtered.map((item) => filterColumns.find((col) => col.field === item));
-        
+
         if (filtered.length === 0) {
             const header = [...columns, ...staticColumns]
             return res.status(200).json({status: true, data: data, header: header});
         } else {
+            const response = await axios.post(`${process.env.FLASK_URL}/analysis`, req.body);
+            const data = response.data
             const header = [...orderColumns, ...staticColumns];
             return res.status(200).json({status: true, data: data, header: header});
         }
+    } catch (error) {
+        res.json({ message: error.message });
+    }
+}
+
+export const getTrips = async (req, res) => {
+    try {
+        const response = await axios.post(`${process.env.FLASK_URL}/analysis`, req.body);
+        const trips = response.data
+        return res.status(200).json(trips)
     } catch (error) {
         res.json({ message: error.message });
     }
