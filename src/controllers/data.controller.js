@@ -108,7 +108,6 @@ export const getGroup = async (req, res) => {
         //     return res.status(200).json({status: true, data: data, header: header});
         // }
 
-
     } catch (error) {
         res.json({ message: error.message });
     }
