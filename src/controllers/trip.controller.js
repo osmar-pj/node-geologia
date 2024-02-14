@@ -163,6 +163,7 @@ export const getTrips = async (req, res) => {
 export const createListTrip = async (req, res) => {
     try {
         const trips = req.body
+        console.log(trips)
         for (let i = 0; i < trips.length; i++) {
             const trip = trips[i]
             const newTrip = await new TripModel(trip)
@@ -217,6 +218,7 @@ export const updateListTrip = async (req, res) => {
                     history: [...trip.history, {work: 'UPDATE waitBeginAnalysis', date: new Date(), user: data[i].name}],
                     veta: tajo.veta,
                     level: tajo.level,
+                    zona: tajo.zona,
                     cod_tableta: data[i].pila,
                     pila: data[i].pila,
                     dominio: data[i].dominio
@@ -251,9 +253,9 @@ export const updateListTrip = async (req, res) => {
                 newTrip.statusTrip = 'waitBeginAnalysis'
                 newTrip.history = [...trip.history, {work: 'UPDATE waitBeginAnalysis', date: new Date(), user: data[i].name}]
                 newTrip.splitRequired = false
-                newTrip.level = tajo ? tajo.level : null
-                newTrip.veta = tajo ? tajo.veta : null
-                newTrip.zone = tajo ? tajo.zone : null
+                newTrip.level = tajo ? tajo.level : 'NOT_NIVEL'
+                newTrip.veta = tajo ? tajo.veta : 'NOT_VETA'
+                newTrip.zona = tajo ? tajo.zona : 'NOT_ZONA'
                 newTrip.code = trip.code
                 newTrip.month = trip.month
                 newTrip.year = trip.year
@@ -310,7 +312,7 @@ export const updateListTrip = async (req, res) => {
                     type: i.type,
                     level: tajo ? tajo.level :"NOT_NIVEL",
                     veta: tajo ? tajo.veta : "NOT_VETA",
-                    zone: tajo ? tajo.zone : "NOT_TAJO"
+                    zona: tajo ? tajo.zona : "NOT_TAJO"
                 }
                 const tripUpdated = await TripModel.findOneAndUpdate({_id: travel_Id}, dataToUpdate, {new: true})
                 return tripUpdated

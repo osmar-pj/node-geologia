@@ -6,7 +6,7 @@ const socket = require('../socket.js').socket
 // GET PILAS TO SHOW IN MODAL ORE CONTROL
 export const getAllPilas = async (req, res) => {
     try {
-        const pilas = await PilaModel.find({}).sort({createdAt: -1})
+        const pilas = await PilaModel.find({}).sort({createdAt: -1}).populate('pilas_merged', 'pila')
         const pilasToMap = pilas.filter(i => i.statusPila !== 'Finalizado')
         const pilasToOreControl = await PilaModel.find({statusPila: 'Acumulando', typePila: 'Pila'}).sort({createdAt: -1})
         const pilasToAppTruck = pilas.filter(i => (i.statusPila === 'waitBeginDespacho' || i.statusPila === 'Despachando') && i.typePila === 'Pila')
@@ -22,8 +22,9 @@ export const getAllPilas = async (req, res) => {
             { title: 'Status', field: 'statusPila', fn: 'status', und: '' },
             { title: 'Tajo', field: 'tajo', fn: 'arr', und: '' },
             { title: 'Dominio', field: 'dominio', fn: 'arr', und: '' },
+            { title: 'Unido', field: 'pilas_merged', fn: '', und: '' },
             { title: 'Cod. Tableta', field: 'cod_tableta', fn: '', und: '' },
-            { title: 'Cod. Despacho', field: 'cod_despacho', fn: '', und: '' },
+            { title: 'Cod. Despacho', field: 'cod_despacho', fn: 'arr', und: '' },
             { title: 'Fecha. Abastecimiento', field: 'dateSupply', fn: '', und: '' },
 
             { title: 'Stock mineral', field: 'stock', fn: 'fixed', und: 'TMH' },
@@ -109,7 +110,7 @@ export const createPila = async (req, res) => {
         })
         const newPilaSaved = await newPila.save()
         socket.io.emit('newPila', newPilaSaved)
-        socket.io.emit('pilas', [newPilaSaved])
+        // socket.io.emit('pilas', [newPilaSaved])
         return res.status(200).json({ status: true, message: 'Pila creada exitosamente', pila: newPilaSaved })
     } catch (error) {
         res.json({ message: error.message })
