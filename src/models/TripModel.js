@@ -55,7 +55,7 @@ const tripSchema = new mongoose.Schema({
     trips: [
         {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'Trip'
+            ref: 'trip'
         }
     ],
     temp: {
@@ -69,6 +69,6 @@ const tripSchema = new mongoose.Schema({
 }
 )
 
-const TripModel = mongoose.model('Trip', tripSchema)
+const TripModel = mongoose.model('trip', tripSchema)
 
 export default TripModel

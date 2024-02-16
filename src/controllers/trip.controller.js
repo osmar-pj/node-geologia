@@ -163,7 +163,6 @@ export const getTrips = async (req, res) => {
 export const createListTrip = async (req, res) => {
     try {
         const trips = req.body
-        console.log(trips)
         for (let i = 0; i < trips.length; i++) {
             const trip = trips[i]
             const newTrip = await new TripModel(trip)

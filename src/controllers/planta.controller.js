@@ -4,7 +4,7 @@ const socket = require('../socket.js').socket
 
 export const getPlantaList = async (req, res) => {
   try {
-    const plantas = await PlantaModel.find()
+    const plantas = await PlantaModel.find().sort({createdAt: 'desc'})
     res.json(plantas)
   } catch (error) {
     res.status(500).json({ message: error.message })
@@ -59,7 +59,7 @@ export const createPlanta = async (req, res) => {
             pila.stock -= trip.ton
             const pilaUpdated = await PilaModel.findByIdAndUpdate(pila._id, {stock: pila.stock}, {new: true})
             console.log(pilaUpdated)
-            socket.io.emit('pilas', pilaUpdated)
+            socket.io.emit('pilas', [pilaUpdated])
             return newTrip.save()
         })
         const newTripPlantaSaved = await Promise.all(tripPromises)

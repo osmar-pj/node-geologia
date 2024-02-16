@@ -120,7 +120,6 @@ export const getDataAnalysis = async (req, res) => {
         const response = await axios.get(`${process.env.FLASK_URL}/analysis2?ts=${ts}&mining=${mining}`);
         const data = response.data.result;
         const meta = response.data.meta;
-        console.log(data, meta)
         return res.status(200).json({status: true, data, meta});
 
     } catch (error) {

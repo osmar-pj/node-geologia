@@ -6,7 +6,7 @@ const socket = require('../socket.js').socket
 // GET PILAS TO SHOW IN MODAL ORE CONTROL
 export const getAllPilas = async (req, res) => {
     try {
-        const pilas = await PilaModel.find({}).sort({createdAt: -1}).populate('pilas_merged', 'pila')
+        const pilas = await PilaModel.find({}).sort({createdAt: -1}).populate('pilas_merged', 'pila').populate('travels', ['tonh', 'ley_ag'])
         const pilasToMap = pilas.filter(i => i.statusPila !== 'Finalizado')
         const pilasToOreControl = await PilaModel.find({statusPila: 'Acumulando', typePila: 'Pila'}).sort({createdAt: -1})
         const pilasToAppTruck = pilas.filter(i => (i.statusPila === 'waitBeginDespacho' || i.statusPila === 'Despachando') && i.typePila === 'Pila')
@@ -22,10 +22,10 @@ export const getAllPilas = async (req, res) => {
             { title: 'Status', field: 'statusPila', fn: 'status', und: '' },
             { title: 'Tajo', field: 'tajo', fn: 'arr', und: '' },
             { title: 'Dominio', field: 'dominio', fn: 'arr', und: '' },
-            { title: 'Unido', field: 'pilas_merged', fn: '', und: '' },
-            { title: 'Cod. Tableta', field: 'cod_tableta', fn: '', und: '' },
+            // { title: 'Unido', field: 'pilas_merged', fn: '', und: '' },
+            // { title: 'Cod. Tableta', field: 'cod_tableta', fn: '', und: '' },
             { title: 'Cod. Despacho', field: 'cod_despacho', fn: 'arr', und: '' },
-            { title: 'Fecha. Abastecimiento', field: 'dateSupply', fn: '', und: '' },
+            { title: 'Fecha. Abastecimiento', field: 'dateSupply', fn: 'date', und: '' },
 
             { title: 'Stock mineral', field: 'stock', fn: 'fixed', und: 'TMH' },
             { title: 'Ton. Total', field: 'tonh', fn: 'fixed', und: 'TMH' },
@@ -104,8 +104,8 @@ export const createPila = async (req, res) => {
             stock: 0,
             tonh: 0,
             ton: 0,
-            x: 100,
-            y: 50,
+            x: 30,
+            y: 30,
             native: 'GUNJOP'
         })
         const newPilaSaved = await newPila.save()
@@ -361,10 +361,12 @@ export const updatePila = async (req, res) => {
 
 export const updatePilaOfMap = async (req, res) => {
     try {
+        console.log(req.body)
         const pila_Id = req.params.pila_Id
         const dataToUpdate = req.body
         const pilaUpdated = await PilaModel.findOneAndUpdate
         ({_id: pila_Id}, dataToUpdate, {new: true})
+        console.log(pilaUpdated.statusPila)
         socket.io.emit('pilas', [pilaUpdated])
         return res.status(200).json({ status: true, message: 'Pila updated' })
     } catch (error) {
