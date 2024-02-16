@@ -6,6 +6,7 @@ const router = express.Router()
 
 router.get('/planta', plantaCtrl.getPlantaList)
 router.get('/planta/:planta_Id', plantaCtrl.getPlanta)
+router.post('/plantalist', plantaCtrl.getListFiltered)
 router.post('/planta', plantaCtrl.createPlanta)
 router.put('/planta/:planta_Id', plantaCtrl.updatePlanta)
 router.delete('/planta/:planta_Id', plantaCtrl.deletePlanta)

@@ -6,7 +6,7 @@ const socket = require('../socket.js').socket
 // GET PILAS TO SHOW IN MODAL ORE CONTROL
 export const getAllPilas = async (req, res) => {
     try {
-        const pilas = await PilaModel.find({}).sort({createdAt: -1}).populate('pilas_merged', 'pila').populate('travels', ['tonh', 'ley_ag'])
+        const pilas = await PilaModel.find({}).sort({createdAt: -1}).populate('pilas_merged', 'pila').populate('travels', 'tonh')
         const pilasToMap = pilas.filter(i => i.statusPila !== 'Finalizado')
         const pilasToOreControl = await PilaModel.find({statusPila: 'Acumulando', typePila: 'Pila'}).sort({createdAt: -1})
         const pilasToAppTruck = pilas.filter(i => (i.statusPila === 'waitBeginDespacho' || i.statusPila === 'Despachando') && i.typePila === 'Pila')

@@ -7,16 +7,38 @@ const plantaSchema = new mongoose.Schema({
     year: Number,
     date: Date,
     turn: String,
-    operator: String,
-    tag: String,
-    contract: String,
+    operator: {
+        type: String,
+        default: 'Yumpag'
+    },
+    tag: {
+        type: String,
+        default: 'System'
+    },
+    contract: {
+        type: String,
+        default: 'Yumpag'
+    },
     cod_tableta: String,
-    zone: String,
-    dominio: String,
-    veta: String,
-    tajo: String,
     ton: Number,
     tonh: Number,
+    zona: {
+        type: Array,
+        default: []
+    },
+    dominio: {
+        type: Array,
+        default: []
+    },
+    veta: {
+        type: Array,
+        default: []
+    },
+    tajo: {
+        type: Array,
+        default: []
+    },
+    ubication: String,
     ley_ag: Number,
     ley_fe: Number,
     ley_mn: Number,
@@ -29,14 +51,19 @@ const plantaSchema = new mongoose.Schema({
     tmh_zn: Number,
     timestamp: Number,
     dateCreatedAt: Date,
-    week: Number,
     nro_month: Number,
     // DATA DE SISTEMA GEOLOGY
-    statusMina: String,  // Completo, Incompleto
-    validMina: Boolean,
+    statusMina: {
+        type: String,
+        default: 'Completo'
+    },  // Completo, Incompleto
+    validMina: {
+        type: Boolean,
+        default: true
+    },
     pilaId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Pila'
+        ref: 'pila'
     }
 },
 {

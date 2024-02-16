@@ -117,7 +117,10 @@ export const generateTripsPlanta = async (req, res) => {
             const trips = JSON.parse(data)
             const tripPromises = trips.map(async trip => {
                 const newTrip = await new PlantaModel(trip)
-                newTrip.zone = trip.zona
+                newTrip.dominio = [trip.dominio]
+                newTrip.tajo = [trip.tajo]
+                newTrip.zona = [trip.zona]
+                newTrip.veta = [trip.veta]
                 newTrip.timestamp = trip.date/1000
                 newTrip.dateCreatedAt = trip.date
                 newTrip.nro_month = new Date(trip.date).getMonth() + 1

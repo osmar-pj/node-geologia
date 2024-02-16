@@ -97,9 +97,7 @@ export const getListTripGeneral = async (req, res) => {
         const filtered = req.body.arr
         const limit = filtered.length === 0 ? 30 : 100
         const trips = await TripModel.find({statusTrip: {$ne: 'Dividido'}}).sort({createdAt: -1}).limit(limit)
-        if(!trips) {
-            return res.status(404).json({ message: 'Trip not found' })
-        }
+        if (!trips) return res.status(404).json({ message: 'No trips found' })
         const data = trips
         const columns = [
             // { title: 'Id', field: '_id', fn: '', und: '' },
