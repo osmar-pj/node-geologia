@@ -8,8 +8,9 @@ router.get('/orecontrol', tripCtrl.getOreControlList)  // Orecontrol
 router.get('/trip/:travel_Id', tripCtrl.getListTrip)
 
 router.get('/qualitycontrol', tripCtrl.getListTripQualityControl)  // Calidad
-router.post('/listGeneral', tripCtrl.getListTripGeneral) // Lista general
-router.post('/trips', tripCtrl.getTrips) // Lista general
+// router.post('/listGeneral', tripCtrl.getListTripGeneral) // Lista general
+router.get('/listGeneral', tripCtrl.getListTripGeneral) // Lista general
+router.post('/listGeneral', tripCtrl.getTripsGrouped) // Agrupacion de viajes
 
 router.post('/trip', tripCtrl.createListTrip)
 

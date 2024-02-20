@@ -23,12 +23,12 @@ export const getPlanta = async (req, res) => {
 
 export const getListFiltered = async (req, res) => {
     try {
-        const arr = req.body.arr
-        const limit = arr.length === 0 ? 30 : 100
+        const {arr, category} = req.body
+        const limit = arr.length === 0 ? 30 : 10000
         const trips = await PlantaModel.find({}).sort({createdAt: -1}).limit(limit).populate('pilaId')
         if (!trips) return res.status(404).json({ message: 'No trips found' })
         const columns = [
-            // { title: 'Id', field: '_id', fn: '', und: '' },
+            { title: 'Id', field: 'id_planta', fn: '', und: '' },
             { title: 'Año', field: 'year', fn: '', und: '' },
             { title: 'Mes', field: 'month', fn: '', und: '' },
             { title: 'Fecha', field: 'date', fn: 'date', und: '' },
@@ -60,7 +60,7 @@ export const getListFiltered = async (req, res) => {
             const header = [...columns, ...staticColumns]
             return res.status(200).json({status: true, len: data.length, data: data, header: header});
         } else {
-            const response = await axios.post(`${process.env.FLASK_URL}/analysis`, {arr, trips});
+            const response = await axios.post(`${process.env.FLASK_URL}/analysis`, {arr, trips, category});
             const data = response.data
             const header = [...orderColumns, ...staticColumns];
             return res.status(200).json({status: true, len: data.length, data: data, header: header});

@@ -6,7 +6,7 @@ const socket = require('../socket.js').socket
 // GET PILAS TO SHOW IN MODAL ORE CONTROL
 export const getAllPilas = async (req, res) => {
     try {
-        const pilas = await PilaModel.find({}).sort({createdAt: -1}).populate('pilas_merged', 'pila').populate('travels', 'tonh')
+        const pilas = await PilaModel.find({}).sort({createdAt: -1}).populate('pilas_merged', 'pila').populate('travels', 'date tonh carriage dominio tajo id_trip mining turn ubication')
         const pilasToMap = pilas.filter(i => i.statusPila !== 'Finalizado')
         const pilasToOreControl = await PilaModel.find({statusPila: 'Acumulando', typePila: 'Pila'}).sort({createdAt: -1})
         const pilasToAppTruck = pilas.filter(i => (i.statusPila === 'waitBeginDespacho' || i.statusPila === 'Despachando') && i.typePila === 'Pila')
@@ -15,6 +15,7 @@ export const getAllPilas = async (req, res) => {
             return res.status(404).json({ message: 'Control calidad sin pendientes' })
         }
         const header = [
+            { title: 'Id', field: 'id_pila', fn: '', und: '' },
             { title: 'Mina', field: 'mining', fn: '', und: '' },
             { title: 'Ubicación', field: 'ubication', fn: '', und: '' },
             { title: 'Pila', field: 'pila', fn: '', und: '' },
@@ -255,7 +256,7 @@ export const updatePila = async (req, res) => {
             // UPDATE TRIPS TO Analizando
             const tripsToUpdate = trips.map(trip => {
                 const data = {
-                    cod_despacho: pilaUpdated.cod_despacho,
+                    cod_despacho: req.body.cod_despacho,
                     statusTrip: 'Analizando',
                     history: [...trip.history, {work: 'UPDATE viaje pasa a Analisis', date: new Date(), user: name}],
                 }
@@ -294,6 +295,17 @@ export const updatePila = async (req, res) => {
             const trips = await TripModel.find({pila: pilaUpdated.pila})
             const tripsToUpdate = trips.map(trip => {
                 const data = {
+                    ley_ag: req.body.ley_ag,
+                    ley_fe: req.body.ley_fe,
+                    ley_mn: req.body.ley_mn,
+                    ley_pb: req.body.ley_pb,
+                    ley_zn: req.body.ley_zn,
+                    tmh_ag: req.body.tmh_ag,
+                    tmh_fe: req.body.tmh_fe,
+                    tmh_mn: req.body.tmh_mn,
+                    tmh_pb: req.body.tmh_pb,
+                    tmh_zn: req.body.tmh_zn,
+                    rango: req.body.rango,
                     statusTrip: 'waitDateAbastecimiento',  // Puede actualizar a Analizando si el proceso es continuo
                     history: [...trip.history, {work: 'UPDATE Muestreado', date: new Date(), user: name}]
                 }
@@ -306,6 +318,7 @@ export const updatePila = async (req, res) => {
         }
         if (statusPila === 'Analizando' && !isPila) {
             console.log('Giba obtiene codigo tableta o puede acumular y analizar denuveo nueva pila encima')
+            console.log('Giba obtiene codigo tableta', req.body)
             if (samples == 0) {
                 const dataToUpdate = req.body
                 dataToUpdate.statusPila = 'Acumulando'
@@ -314,8 +327,19 @@ export const updatePila = async (req, res) => {
                 const trips = await TripModel.find({pila: pilaUpdated.pila})
                 const tripsToUpdate = trips.map(trip => {
                     const data = {
+                        ley_ag: req.body.ley_ag,
+                        ley_fe: req.body.ley_fe,
+                        ley_mn: req.body.ley_mn,
+                        ley_pb: req.body.ley_pb,
+                        ley_zn: req.body.ley_zn,
+                        tmh_ag: req.body.tmh_ag,
+                        tmh_fe: req.body.tmh_fe,
+                        tmh_mn: req.body.tmh_mn,
+                        tmh_pb: req.body.tmh_pb,
+                        tmh_zn: req.body.tmh_zn,
+                        rango: req.body.rango,
                         statusTrip: 'Acumulando',  // Puede actualizar a Analizando si el proceso es continuo
-                        history: [...trip.history, {work: `UPDATE se sube las muestras ${samples + 1}`, date: new Date(), user: name}]
+                        history: [...trip.history, {work: `UPDATE se sube las muestras ${samples + 1} a la giba`, date: new Date(), user: name}]
                     }
                     const updateTrip = TripModel.findOneAndUpdate({_id: trip._id}, data, {new: true})
                     return updateTrip

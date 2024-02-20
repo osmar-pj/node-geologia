@@ -1,11 +1,10 @@
-import mongoose from 'mongoose';
+import mongoose from 'mongoose'
+import AutoIncrementFactory from 'mongoose-sequence'
 
-import { config } from 'dotenv';
-config();
+import { config } from 'dotenv'
+config()
 
 const db = mongoose.connect(process.env.MONGO_URL, {
-    // useNewUrlParser: true,
-    // useUnifiedTopology: true,
     // auth: {
     //     username: process.env.MONGO_USER,
     //     password: process.env.MONGO_PASS
@@ -13,10 +12,12 @@ const db = mongoose.connect(process.env.MONGO_URL, {
     // authSource: 'admin'
 })
 .then(() => {
-    console.log('Connected to BD');
+    console.log('Connected to BD')
 })
 .catch((error) => {
-    console.error('Error al conectar a la base de datos:', error);
-});
+    console.error('Error al conectar a la base de datos:', error)
+})
 
-export default db;
+const AutoIncrement = AutoIncrementFactory(mongoose)
+
+export default {db, AutoIncrement}

@@ -29,24 +29,25 @@ export const getOreControlList = async (req, res) => {
         }
         
         const header = [
-            // { title: 'Id', field: '_id', fn: '', und: '' },
+            { title: 'Id', field: 'id_trip', fn: '', und: '', type: 'id' },
             // { title: 'Año', field: 'year', fn: '', und: '' },
             // { title: 'Mes', field: 'month', fn: '', und: '' },
-            { title: 'Fecha', field: 'date', fn: 'date', und: '' },
-            { title: 'Estado', field: 'status', fn: '', und: '' },
-            { title: 'Ubicación', field: 'ubication', fn: '', und: '' },
-            { title: 'Pila', field: 'destiny', fn: 'arr', und: '' },
-            { title: 'Turno', field: 'turn', fn: '', und: '' },
-            { title: 'Placa', field: 'tag', fn: '', und: '' },
-            { title: 'Vagones', field: 'vagones', fn: '', und: '' },
-            { title: 'Mina', field: 'mining', fn: '', und: '' },
-            { title: 'Nivel', field: 'level', fn: '', und: '' },
-            { title: 'Veta', field: 'veta', fn: '', und: '' },
-            { title: 'Tipo', field: 'type', fn: '', und: '' },
-            { title: 'Tajo', field: 'tajo', fn: '', und: '' },
-            { title: 'Dominio', field: 'dominio', fn: 'arr', und: '' },
-            { title: 'Tonelaje', field: 'tonh', fn: '', und: '' },
-            { title: 'Transition', field: 'statusPila', fn: '', und: '' }
+            { title: 'Fecha', field: 'date', fn: 'date', und: '', type: 'time' },
+            { title: 'Estado', field: 'status', fn: '', und: '', type: 'categorical' },
+            { title: 'Ubicación', field: 'ubication', fn: '', und: '', type: 'categorical' },
+            { title: 'Pila', field: 'destiny', fn: 'arr', und: '', type: 'categorical' },
+            { title: 'Turno', field: 'turn', fn: '', und: '', type: 'categorical' },
+            { title: 'Placa', field: 'tag', fn: '', und: '', type: 'categorical' },
+            { title: 'Vagones', field: 'vagones', fn: '', und: '', type: 'categorical' },
+            { title: 'Mina', field: 'mining', fn: '', und: '', type: 'categorical' },
+            { title: 'Zona', field: 'zona', fn: '', und: '', type: 'categorical' },
+            { title: 'Nivel', field: 'level', fn: '', und: '', type: 'categorical' },
+            { title: 'Veta', field: 'veta', fn: '', und: '', type: 'categorical' },
+            { title: 'Tipo', field: 'type', fn: '', und: '', type: 'categorical'},
+            { title: 'Tajo', field: 'tajo', fn: '', und: '', type: 'categorical' },
+            { title: 'Dominio', field: 'dominio', fn: 'arr', und: '', type: 'categorical' },
+            { title: 'Tonelaje', field: 'tonh', fn: '', und: '', type: 'numerical' },
+            { title: 'Transition', field: 'statusPila', fn: '', und: '',  }
         ]
         return res.status(200).json({status: true, data: trips, header: header});
     } catch (error) {
@@ -63,27 +64,27 @@ export const getListTripQualityControl = async (req, res) => {
             return res.status(404).json({ message: 'Control calidad sin pendientes' })
         }
         const header = [
-            // { title: 'Año', field: 'year', fn: '', und: '' },
-            // { title: 'Mes', field: 'month', fn: '', und: '' },
-            // { title: 'Fecha', field: 'date', fn: '', und: '' },
-            // { title: 'Estado', field: 'status', fn: '', und: '' },
-            { title: 'Mina', field: 'mining', fn: '', und: '' },
-            { title: 'Ubicación', field: 'ubication', fn: '', und: '' },
-            { title: 'Pila', field: 'pila', fn: '', und: '' },
-            { title: 'Viajes', field: 'travels', fn: 'count', und: '' }, // contar el array para tener los viaje
-            { title: 'Tajo', field: 'tajo', fn: 'arr', und: '' },
-            { title: 'Dominio', field: 'dominio', fn: 'arr', und: '' },
-            { title: 'Cod. Tableta', field: 'cod_tableta', fn: '', und: '' },
-            { title: 'Cod. Despacho', field: 'cod_despacho', fn: 'arr', und: '' },
-            { title: 'Fecha. Abastecimiento', field: 'dateSupply', fn: '', und: '' },
+            // { title: 'Año', field: 'year', fn: '', und: '', type: 'time'},
+            // { title: 'Mes', field: 'month', fn: '', und: '', type: 'time'},
+            // { title: 'Fecha', field: 'date', fn: '', und: '', type: 'time'},
+            // { title: 'Estado', field: 'status', fn: '', und: '', type: 'categorical'},
+            { title: 'Mina', field: 'mining', fn: '', und: '', type: 'categorical', filter: false },
+            { title: 'Ubicación', field: 'ubication', fn: '', und: '', type: 'categorical', filter: true },
+            { title: 'Pila', field: 'pila', fn: '', und: '', type: 'unique', filter: false },
+            { title: 'Viajes', field: 'travels', fn: 'count', und: '', type: 'cluster', filter: false }, // contar el array para tener los viaje
+            { title: 'Tajo', field: 'tajo', fn: 'arr', und: '', type: 'categorical', filter: true },
+            { title: 'Dominio', field: 'dominio', fn: 'arr', und: '', type: 'categorical', filter: true },
+            { title: 'Cod. Tableta', field: 'cod_tableta', fn: '', und: '', type: 'unique', filter: false },
+            { title: 'Cod. Despacho', field: 'cod_despacho', fn: 'arr', und: '', type: 'cluster', filter: false},
+            { title: 'Fecha. Abastecimiento', field: 'dateSupply', fn: '', und: '', type: 'time', filter: false},
 
-            { title: 'Stock mineral', field: 'stock', fn: 'fixed', und: 'TMH' },
-            { title: 'Ton. Total', field: 'tonh', fn: 'fixed', und: 'TMH' },
-            { title: 'Ley Ag', field: 'ley_ag', fn: 'fixed', und: '' },
-            { title: 'Ley Fe', field: 'ley_fe', fn: 'fixed', und: '' },
-            { title: 'Ley Mn', field: 'ley_mn', fn: 'fixed', und: '' },
-            { title: 'Ley Pb', field: 'ley_pb', fn: 'fixed', und: '' },
-            { title: 'Ley Zn', field: 'ley_zn', fn: 'fixed', und: '' },
+            { title: 'Stock mineral', field: 'stock', fn: 'fixed', und: 'TMH', type: 'numerical' },
+            { title: 'Ton. Total', field: 'tonh', fn: 'fixed', und: 'TMH', type: 'numerical' },
+            { title: 'Ley Ag', field: 'ley_ag', fn: 'fixed', und: '', type: 'numerical' },
+            { title: 'Ley Fe', field: 'ley_fe', fn: 'fixed', und: '', type: 'numerical' },
+            { title: 'Ley Mn', field: 'ley_mn', fn: 'fixed', und: '', type: 'numerical' },
+            { title: 'Ley Pb', field: 'ley_pb', fn: 'fixed', und: '', type: 'numerical' },
+            { title: 'Ley Zn', field: 'ley_zn', fn: 'fixed', und: '', type: 'numerical' },
             // { title: 'Ton*Ley', field: 'tmh_ag', fn: 'fixed', und: '' }
         ]
         return res.status(200).json({status: true, data: pilas, header: header})
@@ -91,34 +92,80 @@ export const getListTripQualityControl = async (req, res) => {
         res.json({ message: error.message });
     }
 }
+
 // GENERAL LIST ALL (falta trabajar el inifinity scroll)
 export const getListTripGeneral = async (req, res) => {
     try {
-        const filtered = req.body.arr
-        const limit = filtered.length === 0 ? 30 : 100
-        const trips = await TripModel.find({statusTrip: {$ne: 'Dividido'}}).sort({createdAt: -1}).limit(limit)
+        const trips = await TripModel.find({statusTrip: {$ne: 'Dividido'}}).sort({createdAt: -1}).limit(50)
         if (!trips) return res.status(404).json({ message: 'No trips found' })
         const data = trips
         const columns = [
-            // { title: 'Id', field: '_id', fn: '', und: '' },
-            { title: 'Año', field: 'year', fn: '', und: '' },
-            { title: 'Mes', field: 'month', fn: '', und: '' },
-            { title: 'Fecha', field: 'date', fn: 'date', und: '' },
-            { title: 'Estado', field: 'status', fn: '', und: '' },
-            { title: 'Ubicación', field: 'ubication', fn: 'arr', und: '' },
-            { title: 'Pila', field: 'pila', fn: '', und: '' },
-            { title: 'Tableta', field: 'cod_tableta', fn: '', und: '' },
-            { title: 'Turno', field: 'turn', fn: '', und: '' },
-            { title: 'Status', field: 'statusTrip', fn: 'status', und: '' },
-            { title: 'Mina', field: 'mining', fn: '', und: '' },
-            { title: 'Nivel', field: 'level', fn: '', und: '' },
-            { title: 'Tipo', field: 'type', fn: '', und: '' },
-            { title: 'Veta', field: 'veta', fn: '', und: '' },
-            { title: 'Tajo', field: 'tajo', fn: '', und: '' },
-            { title: 'Cod Despacho', field: 'cod_despacho', fn: '', und: '' },
-            { title: 'Dominio', field: 'dominio', fn: 'arr', und: '' },
-            { title: 'Rango', field: 'rango', fn: '', und: '' },
-            { title: 'Fecha de abastecimiento', field: 'dateSupply', fn: 'date', und: '' }
+            { title: 'Id', field: 'id_trip', fn: '', und: '', type: 'unique', group: false},
+            { title: 'Año', field: 'year', fn: '', und: '', type: 'time', group: false},
+            { title: 'Mes', field: 'month', fn: '', und: '', type: 'time', group: false},
+            { title: 'Fecha', field: 'date', fn: 'date', und: '', type: 'time', group: false},
+            { title: 'Estado', field: 'status', fn: '', und: '', type: 'categorical', group: true},
+            { title: 'Ubicación', field: 'ubication', fn: 'arr', und: '', type: 'categorical', group: true},
+            { title: 'Pila', field: 'pila', fn: '', und: '', type: 'unique', group: false},
+            { title: 'Tableta', field: 'cod_tableta', fn: '', und: '', type: 'unique', group: false},
+            { title: 'Turno', field: 'turn', fn: '', und: '', type: 'categorical', group: true},
+            { title: 'Status', field: 'statusTrip', fn: 'status', und: '', type: 'categorical', group: true},
+            { title: 'Mina', field: 'mining', fn: '', und: '', type: 'categorical', group: false},
+            { title: 'Nivel', field: 'level', fn: '', und: '', type: 'categorical', group: true},
+            { title: 'Tipo', field: 'type', fn: '', und: '', type: 'categorical', group: true},
+            { title: 'Veta', field: 'veta', fn: '', und: '', type: 'categorical', group: true},
+            { title: 'Tajo', field: 'tajo', fn: '', und: '', type: 'categorical', group: true},
+            { title: 'Cod Despacho', field: 'cod_despacho', fn: '', und: '', type: 'unique', group: false},
+            { title: 'Dominio', field: 'dominio', fn: 'arr', und: '', type: 'categorical', group: true},
+            { title: 'Rango', field: 'rango', fn: '', und: '', type: 'categorical', group: true},
+            { title: 'Fecha de abastecimiento', field: 'dateSupply', fn: 'date', und: '', type: 'time', group: false},
+        ]
+        
+        const staticColumns = [
+            // { title: 'Ton', field: 'ton', fn: 'fixed', und: 'TM' },
+            { title: 'Tonh', field: 'tonh', fn: 'fixed', und: 'TMH' },
+            { title: 'Ley Ag', field: 'ley_ag', fn: 'fixed', und: '' },
+            { title: 'Ley Fe', field: 'ley_fe', fn: 'fixed', und: '' },
+            { title: 'Ley Mn', field: 'ley_mn', fn: 'fixed', und: '' },
+            { title: 'Ley Pb', field: 'ley_pb', fn: 'fixed', und: '' },
+            { title: 'Ley Zn', field: 'ley_zn', fn: 'fixed', und: '' },
+        ];
+;
+        const header = [...columns, ...staticColumns];
+        return res.status(200).json({status: true, data: data, header: header, grouped: columns.filter(i => i.group === true)} )
+    } catch (error) {
+        res.json({ message: error.message });
+    }
+}
+
+export const getTripsGrouped = async (req, res) => {
+    try {
+        const {ts, arr, category} = req.body
+        const limit = arr.length === 0 ? 10 : 10000
+        const trips = await TripModel.find({statusTrip: {$ne: 'Dividido'}}).sort({createdAt: -1}).limit(limit)
+        if (arr.length === 0) return res.status(404).json({ message: 'No trips grouped' })
+        if (!trips) return res.status(404).json({ message: 'No trips found' })
+        const data = trips
+        const columns = [
+            // { title: 'Id', field: '_id', fn: '', und: '', type: 'unique', filter: false},
+            { title: 'Año', field: 'year', fn: '', und: '', type: 'time', group: false},
+            { title: 'Mes', field: 'month', fn: '', und: '', type: 'time', group: false},
+            { title: 'Fecha', field: 'date', fn: 'date', und: '', type: 'time', group: false},
+            { title: 'Estado', field: 'status', fn: '', und: '', type: 'categorical', group: true},
+            { title: 'Ubicación', field: 'ubication', fn: 'arr', und: '', type: 'categorical', group: true},
+            { title: 'Pila', field: 'pila', fn: '', und: '', type: 'unique', group: false},
+            { title: 'Tableta', field: 'cod_tableta', fn: '', und: '', type: 'unique', group: false},
+            { title: 'Turno', field: 'turn', fn: '', und: '', type: 'categorical', group: true},
+            { title: 'Status', field: 'statusTrip', fn: 'status', und: '', type: 'categorical', group: true},
+            { title: 'Mina', field: 'mining', fn: '', und: '', type: 'categorical', group: false},
+            { title: 'Nivel', field: 'level', fn: '', und: '', type: 'categorical', group: true},
+            { title: 'Tipo', field: 'type', fn: '', und: '', type: 'categorical', group: true},
+            { title: 'Veta', field: 'veta', fn: '', und: '', type: 'categorical', group: true},
+            { title: 'Tajo', field: 'tajo', fn: '', und: '', type: 'categorical', group: true},
+            { title: 'Cod Despacho', field: 'cod_despacho', fn: '', und: '', type: 'unique', group: false},
+            { title: 'Dominio', field: 'dominio', fn: 'arr', und: '', type: 'categorical', group: true},
+            { title: 'Rango', field: 'rango', fn: '', und: '', type: 'categorical', group: true},
+            { title: 'Fecha de abastecimiento', field: 'dateSupply', fn: 'date', und: '', type: 'time', group: false},
         ]
         
         const staticColumns = [
@@ -131,28 +178,11 @@ export const getListTripGeneral = async (req, res) => {
             { title: 'Ley Zn', field: 'ley_zn', fn: 'fixed', und: '' }
         ];
 
-        const filterColumns = columns.filter((col) => filtered.includes(col.field));
-        const orderColumns = filtered.map((item) => filterColumns.find((col) => col.field === item));
-
-        if (filtered.length === 0) {
-            const header = [...columns, ...staticColumns]
-            return res.status(200).json({status: true, data: data, header: header});
-        } else {
-            const response = await axios.post(`${process.env.FLASK_URL}/analysis`, req.body);
-            const data = response.data
-            const header = [...orderColumns, ...staticColumns];
-            return res.status(200).json({status: true, data: data, header: header});
-        }
-    } catch (error) {
-        res.json({ message: error.message });
-    }
-}
-
-export const getTrips = async (req, res) => {
-    try {
-        const response = await axios.post(`${process.env.FLASK_URL}/analysis`, req.body);
-        const trips = response.data
-        return res.status(200).json(trips)
+        const filterColumns = columns.filter((col) => arr.includes(col.field));
+        const orderColumns = arr.map((item) => filterColumns.find((col) => col.field === item));
+        const response = await axios.post(`${process.env.FLASK_URL}/analysis`, {ts: Math.floor(ts/1000), arr, trips: trips.filter(i => i.statusTrip === 'waitBeginDespacho'), category});
+        const header = [...orderColumns, ...staticColumns];
+        return res.status(200).json({status: true, data: response.data, header: header })
     } catch (error) {
         res.json({ message: error.message });
     }

@@ -40,7 +40,8 @@ export const generateTrip = async (req, res) => {
             const trips = JSON.parse(data)
             for (let i = 0; i < trips.length; i++) {
                 const newTrip = await new TripModel(trips[i])
-                newTrip.statusTrip = newTrip.status == 'Cancha' ? 'Muestreado' : 'Despachando'
+                newTrip.history = [{work: 'CREATE from client', date: new Date(), user: 'System'}]
+                newTrip.statusTrip = newTrip.status == 'Cancha' ? 'waitBeginDespacho' : 'Finalizado'
                 newTrip.statusMina = 'Completo'
                 newTrip.splitRequired = false
                 await newTrip.save()
@@ -67,7 +68,7 @@ export const generateRumas = async (req, res) => {
                 newPila.statusPila = newPila.status == 'Cancha' ? 'waitBeginDespacho' : 'Finalizado'
                 newPila.history = [{work: 'CREATE from client', date: new Date(), user: 'System'}]
                 newPila.statusBelong = 'No Belong'
-                newPila.x = 100
+                newPila.x = 50
                 newPila.y = 50
                 newPila.native = 'CIA'
                 newPila.stock = newPila.tonh
@@ -91,8 +92,8 @@ export const generateRumas = async (req, res) => {
                 newPila.statusPila = 'Acumulando'
                 newPila.history = [{work: 'CREATE gibas en cero', date: new Date(), user: 'System'}]
                 newPila.statusBelong = 'No Belong'
-                newPila.x = 120
-                newPila.y = 60
+                newPila.x = 50
+                newPila.y = 50
                 newPila.native = 'CIA'
                 newPila.stock = 0
                 newPila.tonh = 0
