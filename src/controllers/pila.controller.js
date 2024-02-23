@@ -1,16 +1,16 @@
 import TripModel from '../models/TripModel.js'
 import PilaModel from '../models/PilaModel.js'
+import axios from 'axios'
 
 const socket = require('../socket.js').socket
 
-// GET PILAS TO SHOW IN MODAL ORE CONTROL
+// GET PILAS TO SHOW N ALL MENUS
 export const getAllPilas = async (req, res) => {
     try {
-        const pilas = await PilaModel.find({}).sort({createdAt: -1}).populate('pilas_merged', 'pila').populate('travels', 'date tonh carriage dominio tajo id_trip mining turn ubication')
+        const pilas = await PilaModel.find({}).sort({createdAt: -1}).populate('pilas_merged', 'pila').populate('travels', 'date tonh carriage dominio tajo id_trip mining turn ubication tag vagones')
         const pilasToMap = pilas.filter(i => i.statusPila !== 'Finalizado')
         const pilasToOreControl = await PilaModel.find({statusPila: 'Acumulando', typePila: 'Pila'}).sort({createdAt: -1})
-        const pilasToAppTruck = pilas.filter(i => (i.statusPila === 'waitBeginDespacho' || i.statusPila === 'Despachando') && i.typePila === 'Pila')
-        // console.log(pilas)
+        const pilasToAppTruck = pilas.filter(i => (i.statusPila === 'waitBeginDespacho' || i.statusPila === 'Despachando' || i.statusPila === 'Finalizado') && i.typePila === 'Pila')
         if(!pilas) {
             return res.status(404).json({ message: 'Control calidad sin pendientes' })
         }
@@ -36,8 +36,8 @@ export const getAllPilas = async (req, res) => {
             { title: 'Ley Pb', field: 'ley_pb', fn: 'fixed', und: '' },
             { title: 'Ley Zn', field: 'ley_zn', fn: 'fixed', und: '' },
         ]
-
-        return res.status(200).json({status: true, data: pilas, header: header, pilasToOreControl: pilasToOreControl, pilasToMap: pilasToMap, pilasToAppTruck: pilasToAppTruck})
+        const response = await axios.get(`${process.env.FLASK_URL}/nsr`)
+        return res.status(200).json({status: true, data: pilas, header: header, pilasToOreControl: pilasToOreControl, pilasToMap: pilasToMap, pilasToAppTruck: pilasToAppTruck, weights: response.data})
     } catch (error) {
         res.json({ message: error.message })
     }
@@ -318,36 +318,34 @@ export const updatePila = async (req, res) => {
         }
         if (statusPila === 'Analizando' && !isPila) {
             console.log('Giba obtiene codigo tableta o puede acumular y analizar denuveo nueva pila encima')
-            console.log('Giba obtiene codigo tableta', req.body)
-            if (samples == 0) {
-                const dataToUpdate = req.body
-                dataToUpdate.statusPila = 'Acumulando'
-                dataToUpdate.history = [...pilaFound.history, {work: 'UPDATE se sube el archivo de muestras a la giba', date: new Date(), user: name}]
-                const pilaUpdated = await PilaModel.findOneAndUpdate({_id: pila_Id}, dataToUpdate, {new: true})
-                const trips = await TripModel.find({pila: pilaUpdated.pila})
-                const tripsToUpdate = trips.map(trip => {
-                    const data = {
-                        ley_ag: req.body.ley_ag,
-                        ley_fe: req.body.ley_fe,
-                        ley_mn: req.body.ley_mn,
-                        ley_pb: req.body.ley_pb,
-                        ley_zn: req.body.ley_zn,
-                        tmh_ag: req.body.tmh_ag,
-                        tmh_fe: req.body.tmh_fe,
-                        tmh_mn: req.body.tmh_mn,
-                        tmh_pb: req.body.tmh_pb,
-                        tmh_zn: req.body.tmh_zn,
-                        rango: req.body.rango,
-                        statusTrip: 'Acumulando',  // Puede actualizar a Analizando si el proceso es continuo
-                        history: [...trip.history, {work: `UPDATE se sube las muestras ${samples + 1} a la giba`, date: new Date(), user: name}]
-                    }
-                    const updateTrip = TripModel.findOneAndUpdate({_id: trip._id}, data, {new: true})
-                    return updateTrip
-                })
-                const updatedTrips = await Promise.all(tripsToUpdate)
-                socket.io.emit('pilas', [pilaUpdated])
-                socket.io.emit('trips', updatedTrips)
-            }
+            const dataToUpdate = req.body
+            dataToUpdate.statusPila = 'Acumulando'
+            dataToUpdate.history = [...pilaFound.history, {work: 'UPDATE se sube el archivo de muestras a la giba', date: new Date(), user: name}]
+            const pilaUpdated = await PilaModel.findOneAndUpdate({_id: pila_Id}, dataToUpdate, {new: true})
+            const trips = await TripModel.find({pila: pilaUpdated.pila, temp: samples})
+            const tripsToUpdate = trips.map(trip => {
+                const data = {
+                    ley_ag: req.body.ley_ag,
+                    ley_fe: req.body.ley_fe,
+                    ley_mn: req.body.ley_mn,
+                    ley_pb: req.body.ley_pb,
+                    ley_zn: req.body.ley_zn,
+                    tmh_ag: req.body.tmh_ag,
+                    tmh_fe: req.body.tmh_fe,
+                    tmh_mn: req.body.tmh_mn,
+                    tmh_pb: req.body.tmh_pb,
+                    tmh_zn: req.body.tmh_zn,
+                    rango: req.body.rango,
+                    temp: samples + 1,
+                    statusTrip: 'Acumulando',  // Puede actualizar a Analizando si el proceso es continuo
+                    history: [...trip.history, {work: `UPDATE se sube las muestras ${samples + 1} a la giba`, date: new Date(), user: name}]
+                }
+                const updateTrip = TripModel.findOneAndUpdate({_id: trip._id}, data, {new: true})
+                return updateTrip
+            })
+            const updatedTrips = await Promise.all(tripsToUpdate)
+            socket.io.emit('pilas', [pilaUpdated])
+            socket.io.emit('trips', updatedTrips)
         }
         if (statusPila === 'waitDateAbastecimiento') {
             console.log('Pila obtiene fecha de abastecimiento')
@@ -385,12 +383,9 @@ export const updatePila = async (req, res) => {
 
 export const updatePilaOfMap = async (req, res) => {
     try {
-        console.log(req.body)
         const pila_Id = req.params.pila_Id
         const dataToUpdate = req.body
-        const pilaUpdated = await PilaModel.findOneAndUpdate
-        ({_id: pila_Id}, dataToUpdate, {new: true})
-        console.log(pilaUpdated.statusPila)
+        const pilaUpdated = await PilaModel.findOneAndUpdate({_id: pila_Id}, dataToUpdate, {new: true})
         socket.io.emit('pilas', [pilaUpdated])
         return res.status(200).json({ status: true, message: 'Pila updated' })
     } catch (error) {
@@ -400,7 +395,6 @@ export const updatePilaOfMap = async (req, res) => {
 
 export const deletePila = async (req, res) => {
     try {
-
         const pila_Id = req.params.pila_Id
         const pilaDeleted = await PilaModel.findOne({pila_Id: pila_Id})
         if(!pilaDeleted) {

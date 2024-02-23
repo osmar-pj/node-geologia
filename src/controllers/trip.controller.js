@@ -49,9 +49,9 @@ export const getOreControlList = async (req, res) => {
             { title: 'Tonelaje', field: 'tonh', fn: '', und: '', type: 'numerical' },
             { title: 'Transition', field: 'statusPila', fn: '', und: '',  }
         ]
-        return res.status(200).json({status: true, data: trips, header: header});
+        return res.status(200).json({status: true, data: trips, header: header})
     } catch (error) {
-        res.json({ message: error.message });
+        res.json({ message: error.message })
     }
 };
 
@@ -89,7 +89,7 @@ export const getListTripQualityControl = async (req, res) => {
         ]
         return res.status(200).json({status: true, data: pilas, header: header})
     } catch (error) {
-        res.json({ message: error.message });
+        res.json({ message: error.message })
     }
 }
 
@@ -106,7 +106,7 @@ export const getListTripGeneral = async (req, res) => {
             { title: 'Fecha', field: 'date', fn: 'date', und: '', type: 'time', group: false},
             { title: 'Estado', field: 'status', fn: '', und: '', type: 'categorical', group: true},
             { title: 'Ubicación', field: 'ubication', fn: 'arr', und: '', type: 'categorical', group: true},
-            { title: 'Pila', field: 'pila', fn: '', und: '', type: 'unique', group: false},
+            // { title: 'Pila', field: 'pila', fn: '', und: '', type: 'unique', group: false},
             { title: 'Tableta', field: 'cod_tableta', fn: '', und: '', type: 'unique', group: false},
             { title: 'Turno', field: 'turn', fn: '', und: '', type: 'categorical', group: true},
             { title: 'Status', field: 'statusTrip', fn: 'status', und: '', type: 'categorical', group: true},
@@ -129,9 +129,9 @@ export const getListTripGeneral = async (req, res) => {
             { title: 'Ley Mn', field: 'ley_mn', fn: 'fixed', und: '' },
             { title: 'Ley Pb', field: 'ley_pb', fn: 'fixed', und: '' },
             { title: 'Ley Zn', field: 'ley_zn', fn: 'fixed', und: '' },
-        ];
-;
-        const header = [...columns, ...staticColumns];
+        ]
+
+        const header = [...columns, ...staticColumns]
         return res.status(200).json({status: true, data: data, header: header, grouped: columns.filter(i => i.group === true)} )
     } catch (error) {
         res.json({ message: error.message });
@@ -142,6 +142,7 @@ export const getTripsGrouped = async (req, res) => {
     try {
         const {ts, arr, category} = req.body
         const limit = arr.length === 0 ? 10 : 10000
+        const mainArr = ['year', 'month', 'mining']
         const trips = await TripModel.find({statusTrip: {$ne: 'Dividido'}}).sort({createdAt: -1}).limit(limit)
         if (arr.length === 0) return res.status(404).json({ message: 'No trips grouped' })
         if (!trips) return res.status(404).json({ message: 'No trips found' })
@@ -169,20 +170,22 @@ export const getTripsGrouped = async (req, res) => {
         ]
         
         const staticColumns = [
-            // { title: 'Ton', field: 'ton', fn: 'fixed', und: 'TM' },
-            { title: 'Tonh', field: 'tonh', fn: 'fixed', und: 'TMH' },
-            { title: 'Ley Ag', field: 'ley_ag', fn: 'fixed', und: '' },
-            { title: 'Ley Fe', field: 'ley_fe', fn: 'fixed', und: '' },
-            { title: 'Ley Mn', field: 'ley_mn', fn: 'fixed', und: '' },
-            { title: 'Ley Pb', field: 'ley_pb', fn: 'fixed', und: '' },
-            { title: 'Ley Zn', field: 'ley_zn', fn: 'fixed', und: '' }
-        ];
-
+            // { title: 'Ton', field: 'ton', fn: 'fixed', und: 'TM', type: 'numerical', group: false},
+            { title: 'Tonh', field: 'tonh', fn: 'fixed', und: 'TMH', type: 'numerical', group: false},
+            { title: 'Ley Ag', field: 'ley_ag', fn: 'fixed', und: '', type: 'numerical', group: false},
+            { title: 'Ley Fe', field: 'ley_fe', fn: 'fixed', und: '', type: 'numerical', group: false},
+            { title: 'Ley Mn', field: 'ley_mn', fn: 'fixed', und: '', type: 'numerical', group: false},
+            { title: 'Ley Pb', field: 'ley_pb', fn: 'fixed', und: '', type: 'numerical', group: false},
+            { title: 'Ley Zn', field: 'ley_zn', fn: 'fixed', und: '', type: 'numerical', group: false},
+        ]
         const filterColumns = columns.filter((col) => arr.includes(col.field));
         const orderColumns = arr.map((item) => filterColumns.find((col) => col.field === item));
+        const mainColumns = columns.filter((col) => mainArr.includes(col.field) && !arr.includes(col.field));
         const response = await axios.post(`${process.env.FLASK_URL}/analysis`, {ts: Math.floor(ts/1000), arr, trips: trips.filter(i => i.statusTrip === 'waitBeginDespacho'), category});
-        const header = [...orderColumns, ...staticColumns];
-        return res.status(200).json({status: true, data: response.data, header: header })
+        const result = response.data
+        const header = [...mainColumns, ...orderColumns, ...staticColumns];
+        result.header = header
+        return res.status(200).json({status: true, data: result, header: header })
     } catch (error) {
         res.json({ message: error.message });
     }

@@ -48,7 +48,6 @@ const tripSchema = new mongoose.Schema(
         statusMina: String,  // Completo, Incompleto
         statusTrip: String, // Creado (APP truck, wagon) / Falta dividir (APP wagon) / Actualizado (QC) / Laboratorio (QC) / Muestreado (QC) / Despachando (QC) / Finalizado (AUTO)
         history: [], // {work: statusTrip, date: Date, user: String}
-        sampleGiba: [],
         carriage: String, // wagon, truck
         splitRequired: Boolean,
         destiny: [],

@@ -115,6 +115,7 @@ export const getGroup = async (req, res) => {
 
 export const getDataAnalysis = async (req, res) => {
     try {
+        console.log(req.query)
         const ts = Math.round(req.query.ts / 1000)
         const mining = req.query.mining
         const stage = req.query.stage

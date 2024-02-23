@@ -36,7 +36,7 @@ export const generateTrip = async (req, res) => {
     try {
         const count = await TripModel.estimatedDocumentCount()
         if (count == 0) {
-            const data = await readFileSync('src/libs/main.json', 'utf-8')
+            const data = await readFileSync('src/libs/canchas.json', 'utf-8')
             const trips = JSON.parse(data)
             for (let i = 0; i < trips.length; i++) {
                 const newTrip = await new TripModel(trips[i])
@@ -57,19 +57,19 @@ export const generateRumas = async (req, res) => {
     try {
         const count = await PilaModel.estimatedDocumentCount()
         if (count == 0) {
-            const data = await readFileSync('src/libs/pila.json', 'utf-8')
+            const data = await readFileSync('src/libs/pilas2.json', 'utf-8')
             const pilas = JSON.parse(data)
             for (let i = 0; i < pilas.length; i++) {
                 const newPila = await new PilaModel(pilas[i])
                 newPila.pila = newPila.cod_tableta
                 newPila.cod_tableta = newPila.cod_tableta
                 newPila.samples = [{Muestra: ''}]
-                newPila.typePila = 'Pila'
+                newPila.typePila = 'Pila' // Change to StockPile
                 newPila.statusPila = newPila.status == 'Cancha' ? 'waitBeginDespacho' : 'Finalizado'
                 newPila.history = [{work: 'CREATE from client', date: new Date(), user: 'System'}]
                 newPila.statusBelong = 'No Belong'
-                newPila.x = 50
-                newPila.y = 50
+                newPila.x = 20
+                newPila.y = 20
                 newPila.native = 'CIA'
                 newPila.stock = newPila.tonh
                 await newPila.save()
