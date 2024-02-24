@@ -36,8 +36,7 @@ export const getAllPilas = async (req, res) => {
             { title: 'Ley Pb', field: 'ley_pb', fn: 'fixed', und: '' },
             { title: 'Ley Zn', field: 'ley_zn', fn: 'fixed', und: '' },
         ]
-        const response = await axios.get(`${process.env.FLASK_URL}/nsr`)
-        return res.status(200).json({status: true, data: pilas, header: header, pilasToOreControl: pilasToOreControl, pilasToMap: pilasToMap, pilasToAppTruck: pilasToAppTruck, weights: response.data})
+        return res.status(200).json({status: true, data: pilas, header: header, pilasToOreControl: pilasToOreControl, pilasToMap: pilasToMap, pilasToAppTruck: pilasToAppTruck})
     } catch (error) {
         res.json({ message: error.message })
     }
@@ -45,8 +44,8 @@ export const getAllPilas = async (req, res) => {
 
 export const getPila = async (req, res) => {
     try {
-        const cod_tableta = req.params.cod_tableta
-        const pila = await PilaModel.findOne({cod_tableta: cod_tableta})
+        const {pila_Id} = req.params
+        const pila = await PilaModel.findOne({_id: pila_Id})
         if(!pila) {
             return res.status(200).json({ status: false, message: 'Pila not found' })
         }
@@ -97,6 +96,7 @@ export const createPila = async (req, res) => {
             cod_tableta: newPilaId,
             valid: true,
             mining: mining,
+            status: 'Cancha',
             ubication: mining === 'YUMPAG' ? 'Cancha Colquicocha' : 'Cancha 2',
             statusBelong: 'No Belong',
             typePila: 'Pila',
@@ -383,6 +383,7 @@ export const updatePila = async (req, res) => {
 
 export const updatePilaOfMap = async (req, res) => {
     try {
+        console.log('updatePilaOfMap', req.body)
         const pila_Id = req.params.pila_Id
         const dataToUpdate = req.body
         const pilaUpdated = await PilaModel.findOneAndUpdate({_id: pila_Id}, dataToUpdate, {new: true})

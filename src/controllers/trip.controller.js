@@ -7,7 +7,7 @@ const socket = require('../socket.js').socket
 
 export const getListTrip = async (req, res) => {
     try {
-        const travel_Id = req.params.travel_Id
+        const { travel_Id } = req.params
         const trips = await TripModel.findOne({_id: travel_Id})
         if(!trips) {
             return res.status(200).json({ status: false, message: 'List Trip not found' })
@@ -22,7 +22,7 @@ export const getListTrip = async (req, res) => {
 export const getOreControlList = async (req, res) => {
     try {
         // find where option 1 and option 2
-        const trips = await TripModel.find({$or: [{statusTrip: 'waitComplete'}, {statusTrip: 'waitSplit'}]}).limit(20)
+        const trips = await TripModel.find({$or: [{statusTrip: 'waitComplete'}, {statusTrip: 'waitSplit'}]})
         // console.log(trips)
         if (!trips) {
             return res.status(404).json({ message: 'Ore Control sin pendientes' })

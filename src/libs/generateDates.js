@@ -59,6 +59,7 @@ export const generateRumas = async (req, res) => {
         if (count == 0) {
             const data = await readFileSync('src/libs/pilas2.json', 'utf-8')
             const pilas = JSON.parse(data)
+            
             for (let i = 0; i < pilas.length; i++) {
                 const newPila = await new PilaModel(pilas[i])
                 newPila.pila = newPila.cod_tableta
@@ -68,10 +69,10 @@ export const generateRumas = async (req, res) => {
                 newPila.statusPila = newPila.status == 'Cancha' ? 'waitBeginDespacho' : 'Finalizado'
                 newPila.history = [{work: 'CREATE from client', date: new Date(), user: 'System'}]
                 newPila.statusBelong = 'No Belong'
+                newPila.stock = newPila.tonh
                 newPila.x = 20
                 newPila.y = 20
                 newPila.native = 'CIA'
-                newPila.stock = newPila.tonh
                 await newPila.save()
             }
             console.log('PILAS SAVED')
