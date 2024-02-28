@@ -383,7 +383,6 @@ export const updatePila = async (req, res) => {
 
 export const updatePilaOfMap = async (req, res) => {
     try {
-        console.log('updatePilaOfMap', req.body)
         const pila_Id = req.params.pila_Id
         const dataToUpdate = req.body
         const pilaUpdated = await PilaModel.findOneAndUpdate({_id: pila_Id}, dataToUpdate, {new: true})

@@ -3,6 +3,7 @@ import PilaModel from '../models/PilaModel.js'
 import TripModel from '../models/TripModel.js'
 import TajoModel from '../models/TajoModel.js'
 import PlantaModel from '../models/PlantaModel.js'
+import ConfigModel from '../models/ConfigModel.js'
 
 export const generateTajo = async (req, res) => {
     try {
@@ -59,7 +60,6 @@ export const generateRumas = async (req, res) => {
         if (count == 0) {
             const data = await readFileSync('src/libs/pilas2.json', 'utf-8')
             const pilas = JSON.parse(data)
-            
             for (let i = 0; i < pilas.length; i++) {
                 const newPila = await new PilaModel(pilas[i])
                 newPila.pila = newPila.cod_tableta
@@ -73,6 +73,7 @@ export const generateRumas = async (req, res) => {
                 newPila.x = 20
                 newPila.y = 20
                 newPila.native = 'CIA'
+                // sabe dateSupply if not null, else save empty
                 await newPila.save()
             }
             console.log('PILAS SAVED')
@@ -135,5 +136,26 @@ export const generateTripsPlanta = async (req, res) => {
         }
     } catch (error) {
         
+    }
+}
+
+export const generateConfig = async (req, res) => {
+    try {
+        const count = await ConfigModel.estimatedDocumentCount()
+        if (count == 0) {
+            const data = await new ConfigModel({
+                vp_ag: 13,
+                vp_pb: 14.69,
+                vp_zn: 13.76,
+                similarDominio: false,
+                similarLey: false,
+                similarMining: false,
+                tolerance: 1
+            })
+            await data.save()
+            console.log('CONFIG SAVED')
+        }
+    } catch (error) {
+        res.json({ message: error.message })
     }
 }
