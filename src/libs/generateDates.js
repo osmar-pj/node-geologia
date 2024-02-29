@@ -14,7 +14,6 @@ export const generateTajo = async (req, res) => {
             const tajosData = JSON.parse(data)
             const tajos = tajosData.map((item, index) => {
                 return {
-                    tajoId: index + 1,
                     name: item.tajo,
                     valid: true,
                     level: item.level,

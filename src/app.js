@@ -10,7 +10,7 @@ import { config } from 'dotenv'
 config()
 
 import { generateTajo, generateTrip, generateRumas, generateTripsPlanta, generateConfig } from './libs/generateDates.js'
-generateTajo()
+// generateTajo()
 generateTrip()
 generateRumas()
 generateTripsPlanta()
@@ -23,6 +23,7 @@ import authRoutes from './routes/auth.routes.js'
 import dataRoutes from './routes/data.routes.js'
 import plantaRoutes from './routes/planta.routes.js'
 import confiRoutes from './routes/config.routes.js'
+import programRoutes from './routes/program.routes.js'
 
 const app = express()
 
@@ -43,7 +44,8 @@ const routes = [
     authRoutes,
     dataRoutes,
     plantaRoutes,
-    confiRoutes
+    confiRoutes,
+    programRoutes
 ]
 
 app.use('/', routes)

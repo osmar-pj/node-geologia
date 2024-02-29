@@ -6,4 +6,8 @@ const router = express.Router()
 
 router.get('/tajo', tajoCtrl.getAllTajo)
 
+router.post('/tajo', tajoCtrl.createTajo)
+
+router.put('/tajo/:tajoId', tajoCtrl.updateTajo)
+
 export default router

@@ -59,7 +59,6 @@ export const getOreControlList = async (req, res) => {
 export const getListTripQualityControl = async (req, res) => {
     try {
         const pilas = await PilaModel.find({statusPila: {$ne: 'Finalizado'}}).sort({createdAt: -1})
-        // console.log(pilas)
         if(!pilas) {
             return res.status(404).json({ message: 'Control calidad sin pendientes' })
         }

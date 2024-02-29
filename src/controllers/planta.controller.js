@@ -5,8 +5,38 @@ const socket = require('../socket.js').socket
 
 export const getPlantaList = async (req, res) => {
   try {
-    const plantas = await PlantaModel.find().sort({createdAt: 'desc'})
-    res.json(plantas)
+    const trips = await PlantaModel.find().sort({createdAt: 'desc'}).limit(50)
+    if (!trips) return res.status(404).json({ message: 'No trips found' })
+    const data = trips
+    const columns = [
+        { title: 'Id', field: 'id_planta', fn: '', und: '', type: 'unique', group: false},
+        { title: 'Año', field: 'year', fn: '', und: '', type: 'time', group: false},
+        { title: 'Mes', field: 'month', fn: '', und: '', type: 'time', group: false},
+        { title: 'Fecha', field: 'date', fn: 'date', und: '', type: 'time', group: false},
+        // { title: 'Estado', field: 'status', fn: '', und: '', type: 'categorical', group: true},
+        { title: 'Ubicación', field: 'ubication', fn: 'arr', und: '', type: 'categorical', group: true},
+        { title: 'Tableta', field: 'cod_tableta', fn: '', und: '', type: 'unique', group: false},
+        { title: 'Turno', field: 'turn', fn: '', und: '', type: 'categorical', group: true},
+        // { title: 'Nivel', field: 'level', fn: '', und: '', type: 'categorical', group: true},
+        // { title: 'Tipo', field: 'type', fn: '', und: '', type: 'categorical', group: true},
+        { title: 'Veta', field: 'veta', fn: 'arr', und: '', type: 'categorical', group: true},
+        { title: 'Tajo', field: 'tajo', fn: 'arr', und: '', type: 'categorical', group: true},
+        { title: 'Dominio', field: 'dominio', fn: 'arr', und: '', type: 'categorical', group: true},
+        { title: 'Zona', field: 'zona', fn: 'arr', und: '', type: 'categorical', group: true},
+    ]
+    
+    const staticColumns = [
+        // { title: 'Ton', field: 'ton', fn: 'fixed', und: 'TM' },
+        { title: 'Tonh', field: 'tonh', fn: 'fixed', und: 'TMH' },
+        { title: 'Ley Ag', field: 'ley_ag', fn: 'fixed', und: '' },
+        { title: 'Ley Fe', field: 'ley_fe', fn: 'fixed', und: '' },
+        { title: 'Ley Mn', field: 'ley_mn', fn: 'fixed', und: '' },
+        { title: 'Ley Pb', field: 'ley_pb', fn: 'fixed', und: '' },
+        { title: 'Ley Zn', field: 'ley_zn', fn: 'fixed', und: '' },
+    ]
+
+    const header = [...columns, ...staticColumns]
+    return res.status(200).json({status: true, data: data, header: header, grouped: columns.filter(i => i.group === true)} )
   } catch (error) {
     res.status(500).json({ message: error.message })
   }
@@ -23,8 +53,9 @@ export const getPlanta = async (req, res) => {
 
 export const getListFiltered = async (req, res) => {
     try {
-        const {arr, category} = req.body
-        const limit = arr.length === 0 ? 30 : 10000
+        console.log(req.body)
+        const {ts, arr, category} = req.body
+        const limit = arr.length === 0 ? 50 : 10000
         const trips = await PlantaModel.find({}).sort({createdAt: -1}).limit(limit).populate('pilaId')
         if (!trips) return res.status(404).json({ message: 'No trips found' })
         const columns = [
@@ -37,8 +68,8 @@ export const getListFiltered = async (req, res) => {
             { title: 'Tableta', field: 'cod_tableta', fn: '', und: '' },
             { title: 'Turno', field: 'turn', fn: '', und: '' },
             // { title: 'Mina', field: 'mining', fn: '', und: '' },
-            // { title: 'Nivel', field: 'level', fn: '', und: '' },
-            // { title: 'Veta', field: 'veta', fn: '', und: '' },
+            { title: 'Zona', field: 'zona', fn: 'arr', und: '' },
+            { title: 'Veta', field: 'veta', fn: 'arr', und: '' },
             { title: 'Tajo', field: 'tajo', fn: 'arr', und: '' },
             { title: 'Dominio', field: 'dominio', fn: 'arr', und: '' }
         ]
@@ -60,10 +91,10 @@ export const getListFiltered = async (req, res) => {
             const header = [...columns, ...staticColumns]
             return res.status(200).json({status: true, len: data.length, data: data, header: header});
         } else {
-            const response = await axios.post(`${process.env.FLASK_URL}/analysis`, {arr, trips, category});
+            const response = await axios.post(`${process.env.FLASK_URL}/analysis/planta`, {ts: Math.floor(ts/1000), arr, trips, category});
             const data = response.data
             const header = [...orderColumns, ...staticColumns];
-            return res.status(200).json({status: true, len: data.length, data: data, header: header});
+            return res.status(200).json({status: true, len: data.length, data: data.data, header: header});
         }
     } catch (error) {
         res.status(500).json({ message: error.message })

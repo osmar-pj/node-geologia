@@ -105,10 +105,12 @@ export const createPila = async (req, res) => {
             stock: 0,
             tonh: 0,
             ton: 0,
-            x: 30,
-            y: 30,
+            x: 1000 + (Math.random() * 2 - 1) * 100,
+            y: 200 + (Math.random() * 2 - 1) * 100,
             native: 'GUNJOP'
         })
+        // random between -1 to 1
+        const randomX = Math.random() * 2 - 1
         const newPilaSaved = await newPila.save()
         socket.io.emit('newPila', newPilaSaved)
         // socket.io.emit('pilas', [newPilaSaved])
