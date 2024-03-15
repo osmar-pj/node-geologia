@@ -14,7 +14,7 @@ export const createTajo = async (req, res) => {
         const tajos = req.body
         const tajoSaved = tajos.data.forEach( async (tajo) => {
             const data = {
-                name: tajo.tajo,
+                name: tajo.name,
                 valid: true,
                 level: tajo.level,
                 veta: tajo.veta,

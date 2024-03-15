@@ -5,33 +5,6 @@ import TajoModel from '../models/TajoModel.js'
 import PlantaModel from '../models/PlantaModel.js'
 import ConfigModel from '../models/ConfigModel.js'
 
-export const generateTajo = async (req, res) => {
-    try {
-        const count = await TajoModel.estimatedDocumentCount()
-        
-        if (count == 0) {
-            const data = await readFileSync('src/libs/tajos.json', 'utf-8')
-            const tajosData = JSON.parse(data)
-            const tajos = tajosData.map((item, index) => {
-                return {
-                    name: item.tajo,
-                    valid: true,
-                    level: item.level,
-                    veta: item.veta,
-                    mineral: item.mineral,
-                    zona: item.zona
-                }
-            })
-            await TajoModel.insertMany(tajos)
-            console.log('TAJOS SAVED')
-
-        }
-    }
-    catch (error) {
-        res.json({ message: error.message })
-    }
-}
-
 export const generateTrip = async (req, res) => {
     try {
         const count = await TripModel.estimatedDocumentCount()
@@ -65,13 +38,14 @@ export const generateRumas = async (req, res) => {
                 newPila.cod_tableta = newPila.cod_tableta
                 newPila.samples = [{Muestra: ''}]
                 newPila.typePila = 'Pila' // Change to StockPile
-                newPila.statusPila = newPila.status == 'Cancha' ? 'waitBeginDespacho' : 'Finalizado'
+                newPila.statusPila = newPila.status != 'Cancha' ? 'Finalizado' : newPila.dateSupply ? 'waitBeginDespacho' : 'waitDateAbastecimiento'
                 newPila.history = [{work: 'CREATE from client', date: new Date(), user: 'System'}]
                 newPila.statusBelong = 'No Belong'
                 newPila.stock = newPila.tonh
                 newPila.x = 20
                 newPila.y = 20
                 newPila.native = 'CIA'
+                newPila.createdAt = new Date(2024, 0, 15)
                 // sabe dateSupply if not null, else save empty
                 await newPila.save()
             }
@@ -99,6 +73,7 @@ export const generateRumas = async (req, res) => {
                 newPila.stock = 0
                 newPila.tonh = 0
                 newPila.ton = 0
+                newPila.createdAt = new Date(2024, 1, 20)
                 
                 await newPila.save()
             })
@@ -118,7 +93,9 @@ export const generateTripsPlanta = async (req, res) => {
             const data = await readFileSync('src/libs/planta.json', 'utf-8')
             const trips = JSON.parse(data)
             const tripPromises = trips.map(async trip => {
+                const pila = await PilaModel.findOne({cod_tableta: trip.cod_tableta})
                 const newTrip = await new PlantaModel(trip)
+                newTrip.mining = pila.mining
                 newTrip.dominio = [trip.dominio]
                 newTrip.tajo = [trip.tajo]
                 newTrip.zona = [trip.zona]

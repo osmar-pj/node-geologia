@@ -53,7 +53,6 @@ export const getPlanta = async (req, res) => {
 
 export const getListFiltered = async (req, res) => {
     try {
-        console.log(req.body)
         const {ts, arr, category} = req.body
         const limit = arr.length === 0 ? 50 : 10000
         const trips = await PlantaModel.find({}).sort({createdAt: -1}).limit(limit).populate('pilaId')
@@ -67,7 +66,7 @@ export const getListFiltered = async (req, res) => {
             { title: 'Ubicación', field: 'ubication', fn: '', und: '' },
             { title: 'Tableta', field: 'cod_tableta', fn: '', und: '' },
             { title: 'Turno', field: 'turn', fn: '', und: '' },
-            // { title: 'Mina', field: 'mining', fn: '', und: '' },
+            { title: 'Mina', field: 'mining', fn: '', und: '' },
             { title: 'Zona', field: 'zona', fn: 'arr', und: '' },
             { title: 'Veta', field: 'veta', fn: 'arr', und: '' },
             { title: 'Tajo', field: 'tajo', fn: 'arr', und: '' },
@@ -81,7 +80,7 @@ export const getListFiltered = async (req, res) => {
             { title: 'Ley Mn', field: 'ley_mn', fn: 'fixed', und: '' },
             { title: 'Ley Pb', field: 'ley_pb', fn: 'fixed', und: '' },
             { title: 'Ley Zn', field: 'ley_zn', fn: 'fixed', und: '' }
-        ];
+        ]
 
         const filterColumns = columns.filter((col) => arr.includes(col.field));
         const orderColumns = arr.map((item) => filterColumns.find((col) => col.field === item));
@@ -91,7 +90,7 @@ export const getListFiltered = async (req, res) => {
             const header = [...columns, ...staticColumns]
             return res.status(200).json({status: true, len: data.length, data: data, header: header});
         } else {
-            const response = await axios.post(`${process.env.FLASK_URL}/analysis/planta`, {ts: Math.floor(ts/1000), arr, trips, category});
+            const response = await axios.post(`${process.env.FLASK_URL}/analysis/planta`, {ts: Math.floor(ts/1000), arr, trips, category})
             const data = response.data
             const header = [...orderColumns, ...staticColumns];
             return res.status(200).json({status: true, len: data.length, data: data.data, header: header});
@@ -111,6 +110,7 @@ export const createPlanta = async (req, res) => {
                 month: trip.month,
                 year: trip.year,
                 date: trip.date,
+                mining: pila.mining,
                 turn: trip.turn,
                 operator: trip.operator,
                 tag: trip.tag,
@@ -118,9 +118,9 @@ export const createPlanta = async (req, res) => {
                 cod_tableta: trip.cod_tableta,
                 ton: trip.ton,
                 tonh: trip.tonh,
-                // zona: pila.zona,
+                zona: pila.zona,
                 dominio: pila.dominio,
-                // veta: pila.veta,
+                veta: pila.veta,
                 tajo: pila.tajo,
                 ubication: pila.ubication,
                 tajo: pila.tajo,
@@ -149,7 +149,6 @@ export const createPlanta = async (req, res) => {
             return newTrip.save()
         })
         const newTripPlantaSaved = await Promise.all(tripPromises)
-        console.log(newTripPlantaSaved)
 
         res.status(201).json({status: true, message: 'Planta criada com sucesso', data: newTripPlantaSaved})
     } catch (error) {

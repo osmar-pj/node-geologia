@@ -1,12 +1,14 @@
 import express from 'express'
 
-import { getPrograms, createProgram, updateProgram, deleteProgram } from '../controllers/program.controller.js'
+import { getProgramsCancha, getProgramsPlanta, createProgram, updateProgram, deleteProgram, createProgramPlanta } from '../controllers/program.controller.js'
 
 const router = express.Router()
 
-router.get('/program', getPrograms)
+router.get('/program/cancha', getProgramsCancha)
+router.get('/program/planta', getProgramsPlanta)
 
 router.post('/program', createProgram)
+router.post('/program/planta', createProgramPlanta)
 
 router.put('/program', updateProgram)
 

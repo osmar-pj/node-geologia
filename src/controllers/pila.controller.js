@@ -10,7 +10,7 @@ export const getAllPilas = async (req, res) => {
         const pilas = await PilaModel.find({}).sort({createdAt: -1}).populate('pilas_merged', 'pila').populate('travels', 'date tonh carriage dominio tajo id_trip mining turn ubication tag vagones')
         const pilasToMap = pilas.filter(i => i.statusPila !== 'Finalizado')
         const pilasToOreControl = await PilaModel.find({statusPila: 'Acumulando', typePila: 'Pila'}).sort({createdAt: -1})
-        const pilasToAppTruck = pilas.filter(i => (i.statusPila === 'waitBeginDespacho' || i.statusPila === 'Despachando' || i.statusPila === 'Finalizado') && i.typePila === 'Pila')
+        const pilasToAppTruck = pilas.filter(i => (i.statusPila === 'waitBeginDespacho' || i.statusPila === 'Despachando' || i.statusBelong == "No Belong") && i.typePila === 'Pila')
         if(!pilas) {
             return res.status(404).json({ message: 'Control calidad sin pendientes' })
         }

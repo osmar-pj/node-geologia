@@ -1,6 +1,6 @@
 import express from 'express'
 
-import { getAllListTrip, createListTrips, getListGeology, getGroup, getDataAnalysis } from '../controllers/data.controller.js'
+import { getAllListTrip, createListTrips, getListGeology, getGroup, getDataAnalysis, getDataHuaron } from '../controllers/data.controller.js'
 
 const router = express.Router()
 

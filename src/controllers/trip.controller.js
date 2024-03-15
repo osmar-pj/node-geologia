@@ -95,7 +95,7 @@ export const getListTripQualityControl = async (req, res) => {
 // GENERAL LIST ALL (falta trabajar el inifinity scroll)
 export const getListTripGeneral = async (req, res) => {
     try {
-        const trips = await TripModel.find({statusTrip: {$ne: 'Dividido'}}).sort({createdAt: -1}).limit(50)
+        const trips = await TripModel.find({statusTrip: {$ne: 'Dividido'}}).sort({createdAt: -1}).limit(100)
         if (!trips) return res.status(404).json({ message: 'No trips found' })
         const data = trips
         const columns = [
@@ -139,6 +139,7 @@ export const getListTripGeneral = async (req, res) => {
 
 export const getTripsGrouped = async (req, res) => {
     try {
+        console.log('GET TRIPS GROUPED', req.body)
         const {ts, arr, category} = req.body
         const limit = arr.length === 0 ? 10 : 10000
         const mainArr = ['year', 'month', 'mining']
@@ -374,6 +375,7 @@ export const updateManyTrip = async (req, res) => {
 
 export const deleteListTrip = async (req, res) => {
     try {
+        console.log('DELETE TRIP', req.params.travel_Id)
         const travel_Id = req.params.travel_Id
         const listTrip = await TripModel.findOne({_id: travel_Id})
         if(!listTrip) {

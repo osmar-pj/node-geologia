@@ -8,6 +8,7 @@ const plantaSchema = new mongoose.Schema(
         month: String,
         year: Number,
         date: Date,
+        mining: String,
         turn: String,
         operator: {
             type: String,

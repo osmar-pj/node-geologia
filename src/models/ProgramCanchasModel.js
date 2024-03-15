@@ -13,6 +13,7 @@ const ProgramSchema = new Schema({
     year: Number,
     user: String
 }, {
+    timestamps: true,
     versionKey: false
 })
 
